@@ -61,7 +61,7 @@
                     <span id="datasource-text" class="text-slate-300">A ligar ao GitHub...</span>
                 </div>
                 <label class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-excel"></i> Carregar Ficheiro Local
+                    <i class="fa-solid fa-file-excel"></i> Carregar Ficheiro
                     <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls, .csv">
                 </label>
             </div>
@@ -450,7 +450,7 @@
                     if (jsonData && jsonData.length > 0) {
                         parseExternalData(jsonData);
                         document.getElementById('datasource-status').className = 'inline-block w-2.5 h-2.5 rounded-full bg-emerald-400';
-                        document.getElementById('datasource-text').textContent = 'GitHub (Movimentos.xlsx) Ativo';
+                        document.getElementById('datasource-text').textContent = 'GitHub Ativo';
                         return;
                     }
                 }
