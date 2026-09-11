@@ -8,8 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <!-- SheetJS for Excel parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Charts (Standard robust engine for Sankey Diagrams) -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -66,9 +70,15 @@
         <!-- Filters Section -->
         <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ano</label>
-                <select id="filter-year" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todos os Anos</option>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Data</label>
+                <select id="filter-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="ALL">Todo o Histórico</option>
+                    <option value="last_1m">Último Mês</option>
+                    <option value="last_3m">Últimos 3 Meses</option>
+                    <option value="last_6m">Últimos 6 Meses</option>
+                    <option value="last_12m">Últimos 12 Meses</option>
+                    <option value="last_2y" selected>Últimos 2 Anos</option>
+                    <option value="last_5y">Últimos 5 Anos</option>
                 </select>
             </div>
             <div>
@@ -94,9 +104,9 @@
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo Total</p>
-                    <h3 id="kpi-balance" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</h3>
-                    <span id="kpi-balance-sub" class="text-xs text-slate-500">Receitas vs Despesas</span>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo Total (Global)</p>
+                    <h3 id="kpi-balance" class="text-2xl font-bold text-slate-900 mt-1">0 €</h3>
+                    <span id="kpi-balance-sub" class="text-xs text-slate-500"></span>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner">
                     <i class="fa-solid fa-wallet"></i>
@@ -106,8 +116,8 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Rendimentos</p>
-                    <h3 id="kpi-income" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</h3>
-                    <span id="kpi-income-sub" class="text-xs text-slate-500">Incl. Investimentos</span>
+                    <h3 id="kpi-income" class="text-2xl font-bold text-emerald-600 mt-1">0 €</h3>
+                    <span id="kpi-income-sub" class="text-xs text-slate-500"></span>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner">
                     <i class="fa-solid fa-arrow-trend-up"></i>
@@ -117,8 +127,8 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Despesas</p>
-                    <h3 id="kpi-expense" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</h3>
-                    <span id="kpi-expense-sub" class="text-xs text-slate-500">Saídas registadas</span>
+                    <h3 id="kpi-expense" class="text-2xl font-bold text-rose-600 mt-1">0 €</h3>
+                    <span id="kpi-expense-sub" class="text-xs text-slate-500"></span>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-inner">
                     <i class="fa-solid fa-arrow-trend-down"></i>
@@ -128,8 +138,8 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rend. Investimentos</p>
-                    <h3 id="kpi-investments" class="text-2xl font-bold text-indigo-600 mt-1">0,00 €</h3>
-                    <span id="kpi-investments-sub" class="text-xs text-slate-500">ETF, PPR, etc.</span>
+                    <h3 id="kpi-investments" class="text-2xl font-bold text-indigo-600 mt-1">0 €</h3>
+                    <span id="kpi-investments-sub" class="text-xs text-slate-500"></span>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shadow-inner">
                     <i class="fa-solid fa-chart-line"></i>
@@ -142,7 +152,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 text-base">Evolução Mensal (Receitas vs Despesas)</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Mensal</span>
+                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full">
                     <canvas id="monthlyChart"></canvas>
@@ -152,7 +162,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 text-base">Evolução do Saldo Acumulado</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Tendência</span>
+                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full">
                     <canvas id="balanceChart"></canvas>
@@ -160,27 +170,59 @@
             </div>
         </section>
 
-        <!-- Charts Grid 2: Doughnut / Pie Charts -->
+        <!-- Charts Grid 2: Doughnut / Pie Charts (Income & Expense) -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Despesas por Categoria</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Despesas</span>
+                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Rendimentos por Categoria</h3>
+                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full flex items-center justify-center">
-                    <canvas id="expensePieChart"></canvas>
+                    <canvas id="incomePieChart"></canvas>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Rendimentos de Investimento (ETF, PPR, etc.)</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Investimentos</span>
+                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Despesas por Categoria</h3>
+                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full flex items-center justify-center">
-                    <canvas id="investmentPieChart"></canvas>
+                    <canvas id="expensePieChart"></canvas>
                 </div>
             </div>
+        </section>
+
+        <!-- Sankey Diagram Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        Fluxo Financeiro
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Médias mensais por categoria (Receitas à esquerda, Despesas à direita).</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <label for="sankey-period" class="text-xs font-semibold text-slate-600 uppercase tracking-wider pl-1">Período:</label>
+                    <select id="sankey-period" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-700">
+                        <option value="last_2y" selected>Últimos 2 Anos</option>
+                        <option value="last_1m">Último Mês</option>
+                        <option value="last_3m">Últimos 3 Meses</option>
+                        <option value="last_6m">Últimos 6 Meses</option>
+                        <option value="last_12m">Últimos 12 Meses</option>
+                        <option value="ALL">Todo o Histórico</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Totais alinhados mais para o centro do gráfico Sankey -->
+            <div class="grid grid-cols-2 px-52 pt-2 font-bold text-base text-slate-800">
+                <div id="sankey-total-income" class="text-left">Receitas: 0 €</div>
+                <div id="sankey-total-expense" class="text-right">Despesas: 0 €</div>
+            </div>
+            <div id="sankey_loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
+                <i class="fa-solid fa-spinner fa-spin text-xl text-brand-600"></i> A calcular diagrama de fluxos...
+            </div>
+            <div id="sankey_chart" class="w-full h-[800px]"></div>
         </section>
 
         <!-- Future Balance Projection Simulator Section -->
@@ -188,18 +230,9 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Simulador de Projeção de Saldo Futuro
+                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Simulador de Projeção de Saldo Futuro (Até 2060)
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Simule o crescimento do património ajustando taxas de aumento anual.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <label class="text-xs font-semibold text-slate-600">Horizonte Temporal:</label>
-                    <select id="proj-years" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500">
-                        <option value="1">1 Ano</option>
-                        <option value="3" selected>3 Anos</option>
-                        <option value="5">5 Anos</option>
-                        <option value="10">10 Anos</option>
-                    </select>
+                    <p class="text-xs text-slate-500 mt-0.5">Simula o crescimento patrimonial com base estrita nas médias mensais dos últimos 2 anos.</p>
                 </div>
             </div>
 
@@ -207,43 +240,43 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>Aumento Rendimentos Gerais</span>
-                        <span id="val-inc-general" class="text-brand-600 font-mono">3.0%</span>
+                        <span id="val-inc-general" class="text-brand-600 font-mono">2.5%</span>
                     </label>
-                    <input type="range" id="input-inc-general" min="-20" max="50" step="0.5" value="3" class="w-full accent-brand-600 cursor-pointer">
+                    <input type="range" id="input-inc-general" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>Aumento Despesas</span>
-                        <span id="val-inc-expense" class="text-rose-600 font-mono">2.0%</span>
+                        <span id="val-inc-expense" class="text-rose-600 font-mono">2.5%</span>
                     </label>
-                    <input type="range" id="input-inc-expense" min="-20" max="50" step="0.5" value="2" class="w-full accent-rose-600 cursor-pointer">
+                    <input type="range" id="input-inc-expense" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>Aumento Rend. Investimentos</span>
-                        <span id="val-inc-invest" class="text-indigo-600 font-mono">7.0%</span>
+                        <span id="val-inc-invest" class="text-indigo-600 font-mono">10.0%</span>
                     </label>
-                    <input type="range" id="input-inc-invest" min="-50" max="100" step="0.5" value="7" class="w-full accent-indigo-600 cursor-pointer">
+                    <input type="range" id="input-inc-invest" min="-50" max="100" step="0.5" value="10" class="w-full accent-indigo-600 cursor-pointer">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                <div class="lg:col-span-2 relative h-72 w-full">
+                <div class="lg:col-span-2 relative h-80 w-full">
                     <canvas id="projectionChart"></canvas>
                 </div>
                 <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md space-y-4">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resumo da Projeção</h4>
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resumo da Projeção (2060)</h4>
                     <div>
-                        <p class="text-xs text-slate-300">Saldo Atual Base</p>
-                        <p id="proj-current-balance" class="text-lg font-bold">0,00 €</p>
+                        <p class="text-xs text-slate-300">Saldo Atual (Base Global)</p>
+                        <p id="proj-current-balance" class="text-lg font-bold">0 €</p>
                     </div>
                     <div>
-                        <p class="text-xs text-slate-300">Saldo Projetado Final</p>
-                        <p id="proj-final-balance" class="text-2xl font-extrabold text-brand-400">0,00 €</p>
+                        <p class="text-xs text-slate-300">Saldo Projetado em 2060</p>
+                        <p id="proj-final-balance" class="text-2xl font-extrabold text-brand-400">0 €</p>
                     </div>
                     <div>
-                        <p class="text-xs text-slate-300">Crescimento Estimado</p>
-                        <p id="proj-growth" class="text-sm font-semibold text-emerald-300">+0,00 € (0%)</p>
+                        <p class="text-xs text-slate-300">Marco FIRE (Independência Financeira)</p>
+                        <p id="proj-fire-status" class="text-xs font-semibold text-amber-300 mt-1">A calcular...</p>
                     </div>
                 </div>
             </div>
@@ -254,7 +287,7 @@
             <div class="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="font-bold text-slate-900 text-base">Transações Detalhadas</h3>
-                    <p class="text-xs text-slate-500">Lista completa com base nos filtros aplicados</p>
+                    <p class="text-xs text-slate-500">Lista completa com base nos filtros aplicados (Valores reais com cêntimos)</p>
                 </div>
                 <div class="relative w-full sm:w-72">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -271,7 +304,7 @@
                             <th class="py-3 px-4">Description / who</th>
                             <th class="py-3 px-4">Category</th>
                             <th class="py-3 px-4">Subcategory</th>
-                            <th class="py-3 px-4 text-right">Amount (one signed column)</th>
+                            <th class="py-3 px-4 text-right">Amount</th>
                         </tr>
                     </thead>
                     <tbody id="transactions-tbody" class="divide-y divide-slate-100 text-slate-700">
@@ -298,18 +331,61 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // Link direto do Raw do seu repositório GitHub configurado
+        // Registar o plugin de Datalabels para o Chart.js
+        Chart.register(ChartDataLabels);
+
+        // Inicializar o Google Charts para renderização do diagrama de Sankey
+        google.charts.load('current', {packages:['sankey']});
+        google.charts.setOnLoadCallback(() => {
+            document.getElementById('sankey-period').addEventListener('change', renderSankeyChart);
+            renderSankeyChart();
+        });
+
+        // Plugin customizado do Chart.js para desenhar o TOTAL arredondado no centro exato do Doughnut chart
+        const centerTotalPlugin = {
+            id: 'centerTotal',
+            beforeDraw(chart) {
+                if (chart.config.type !== 'doughnut') return;
+                const { ctx, chartArea: { width, height, left, top } } = chart;
+                const dataset = chart.data.datasets[0];
+                if (!dataset) return;
+                
+                const total = dataset.data.reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
+                const formattedTotal = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(total));
+
+                ctx.save();
+                const centerX = left + width / 2;
+                const centerY = top + height / 2;
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Rótulo "TOTAL"
+                ctx.font = 'bold 10px sans-serif';
+                ctx.fillStyle = '#94a3b8'; // slate-400
+                ctx.fillText('TOTAL', centerX, centerY - 10);
+
+                // Valor formatado
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillStyle = '#1e293b'; // slate-800
+                ctx.fillText(formattedTotal, centerX, centerY + 10);
+                
+                ctx.restore();
+            }
+        };
+
+        Chart.register(centerTotalPlugin);
+
+        // Link direto do Raw do repositório GitHub
         const githubExcelUrl = 'https://raw.githubusercontent.com/luishortipor/controlofinanceiro/main/Movimentos.xlsx';
 
-        // Fallback de dados caso ocorra algum bloqueio de CORS do GitHub Pages
+        // Fallback de dados de exemplo
         const defaultRawData = [
             { date: "31/08/2026", description: "Carreira 28", category: "Restauração", amount: -3.25, subcategory: "Black Plus Luís" },
             { date: "31/08/2026", description: "Cartão Dá Compras", category: "Compras", amount: -96.73, subcategory: "Millennium" },
             { date: "31/08/2026", description: "Compras Saldo Continente", category: "Compras", amount: -202.60, subcategory: "Millennium" },
             { date: "31/08/2026", description: "ETF", category: "Rend. Investimentos", amount: 3500.56, subcategory: "Millennium" },
             { date: "31/08/2026", description: "Galp", category: "Gasóleo/Gasolina", amount: -44.66, subcategory: "Black Plus Cele..." },
-            { date: "31/08/2026", description: "Galp Saldo Continente", category: "Gasóleo/Gasolina", amount: -50.00, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Outros Saldo Continente", category: "Outros", amount: -8.89, subcategory: "Millennium" },
             { date: "31/08/2026", description: "PPR", category: "Rend. Investimentos", amount: 1584.22, subcategory: "Millennium" }
         ];
 
@@ -318,13 +394,22 @@
 
         let monthlyChart = null;
         let balanceChart = null;
+        let incomePieChart = null;
         let expensePieChart = null;
-        let investmentPieChart = null;
         let projectionChart = null;
 
         let currentPage = 1;
         const pageSize = 10;
         let searchTerm = '';
+
+        function generateDistinctColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = Math.round((i * 137.5) % 360);
+                colors.push(`hsl(${hue}, 75%, 55%)`);
+            }
+            return colors;
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             await tryLoadExternalExcel();
@@ -352,7 +437,7 @@
                     }
                 }
             } catch (e) {
-                console.warn('Não foi possível carregar diretamente do GitHub (CORS). A usar dados de exemplo ou carregue manualmente.', e);
+                console.warn('Não foi possível carregar diretamente do GitHub (CORS). A usar dados de exemplo.', e);
                 document.getElementById('datasource-status').className = 'inline-block w-2.5 h-2.5 rounded-full bg-rose-400';
                 document.getElementById('datasource-text').textContent = 'Erro ao ler do GitHub (Usando Exemplo)';
             }
@@ -362,8 +447,6 @@
             const parsed = rawJson.map(row => {
                 const keys = Object.keys(row);
                 
-                // Mapeamento exato para as colunas do seu Excel:
-                // Date, Description / who, Category, Amount (one signed column), Subcategory
                 let dateKey = keys.find(k => /date|data/i.test(k)) || keys[0];
                 let descKey = keys.find(k => /desc|who|nome|descricao/i.test(k)) || keys[1];
                 let catKey = keys.find(k => /cat/i.test(k)) || keys[2];
@@ -406,7 +489,6 @@
             }
         }
 
-        // Carregamento de ficheiro local Excel via botão
         document.getElementById('excel-file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -442,17 +524,26 @@
                 subsSet.add(t.subcategory);
             });
 
-            const yearSelect = document.getElementById('filter-year');
+            const dateSelect = document.getElementById('filter-date');
             const catSelect = document.getElementById('filter-category');
             const subSelect = document.getElementById('filter-subcategory');
 
-            const currYear = yearSelect.value;
+            const currDateVal = dateSelect.value;
             const currCat = catSelect.value;
             const currSub = subSelect.value;
 
-            yearSelect.innerHTML = '<option value="ALL">Todos os Anos</option>';
-            Array.from(yearsSet).sort().forEach(y => {
-                yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            dateSelect.innerHTML = `
+                <option value="ALL">Todo o Histórico</option>
+                <option value="last_1m">Último Mês</option>
+                <option value="last_3m">Últimos 3 Meses</option>
+                <option value="last_6m">Últimos 6 Meses</option>
+                <option value="last_12m">Últimos 12 Meses</option>
+                <option value="last_2y">Últimos 2 Anos</option>
+                <option value="last_5y">Últimos 5 Anos</option>
+            `;
+
+            Array.from(yearsSet).sort().reverse().forEach(y => {
+                dateSelect.innerHTML += `<option value="year_${y}">Ano ${y}</option>`;
             });
 
             catSelect.innerHTML = '<option value="ALL">Todas as Categorias</option>';
@@ -465,18 +556,18 @@
                 subSelect.innerHTML += `<option value="${s}">${s}</option>`;
             });
 
-            yearSelect.value = currYear;
+            dateSelect.value = currDateVal;
             catSelect.value = currCat;
             subSelect.value = currSub;
         }
 
         function setupEventListeners() {
-            document.getElementById('filter-year').addEventListener('change', processAndRender);
+            document.getElementById('filter-date').addEventListener('change', processAndRender);
             document.getElementById('filter-category').addEventListener('change', processAndRender);
             document.getElementById('filter-subcategory').addEventListener('change', processAndRender);
             
             document.getElementById('reset-filters').addEventListener('click', () => {
-                document.getElementById('filter-year').value = 'ALL';
+                document.getElementById('filter-date').value = 'last_2y';
                 document.getElementById('filter-category').value = 'ALL';
                 document.getElementById('filter-subcategory').value = 'ALL';
                 document.getElementById('table-search').value = '';
@@ -489,7 +580,7 @@
                 renderTable();
             });
 
-            ['input-inc-general', 'input-inc-expense', 'input-inc-invest', 'proj-years'].forEach(id => {
+            ['input-inc-general', 'input-inc-expense', 'input-inc-invest'].forEach(id => {
                 document.getElementById(id).addEventListener('input', () => {
                     updateSimulatorUI();
                     renderProjectionChart();
@@ -504,22 +595,61 @@
         }
 
         function processAndRender() {
-            const selYear = document.getElementById('filter-year').value;
+            const dateFilterVal = document.getElementById('filter-date').value;
             const selCat = document.getElementById('filter-category').value;
             const selSub = document.getElementById('filter-subcategory').value;
 
+            let maxDate = new Date(0);
+            globalTransactions.forEach(t => {
+                let d = parseDate(t.date);
+                if (d > maxDate) maxDate = d;
+            });
+            if (isNaN(maxDate.getTime())) maxDate = new Date();
+
             filteredTransactions = globalTransactions.filter(t => {
-                let year = t.date.split('/').pop() || t.date.substring(0, 4);
-                let matchYear = (selYear === 'ALL' || year === selYear);
+                let tDate = parseDate(t.date);
+                let matchDate = true;
+
+                if (dateFilterVal.startsWith('year_')) {
+                    let targetYear = dateFilterVal.replace('year_', '');
+                    let yearStr = t.date.split('/').pop() || t.date.substring(0, 4);
+                    matchDate = (yearStr === targetYear);
+                } else if (dateFilterVal === 'last_1m') {
+                    let limit = new Date(maxDate);
+                    limit.setMonth(limit.getMonth() - 1);
+                    matchDate = (tDate >= limit);
+                } else if (dateFilterVal === 'last_3m') {
+                    let limit = new Date(maxDate);
+                    limit.setMonth(limit.getMonth() - 3);
+                    matchDate = (tDate >= limit);
+                } else if (dateFilterVal === 'last_6m') {
+                    let limit = new Date(maxDate);
+                    limit.setMonth(limit.getMonth() - 6);
+                    matchDate = (tDate >= limit);
+                } else if (dateFilterVal === 'last_12m') {
+                    let limit = new Date(maxDate);
+                    limit.setFullYear(limit.getFullYear() - 1);
+                    matchDate = (tDate >= limit);
+                } else if (dateFilterVal === 'last_2y') {
+                    let limit = new Date(maxDate);
+                    limit.setFullYear(limit.getFullYear() - 2);
+                    matchDate = (tDate >= limit);
+                } else if (dateFilterVal === 'last_5y') {
+                    let limit = new Date(maxDate);
+                    limit.setFullYear(limit.getFullYear() - 5);
+                    matchDate = (tDate >= limit);
+                }
+
                 let matchCat = (selCat === 'ALL' || t.category === selCat);
                 let matchSub = (selSub === 'ALL' || t.subcategory === selSub);
-                return matchYear && matchCat && matchSub;
+                return matchDate && matchCat && matchSub;
             });
 
             filteredTransactions.sort((a, b) => parseDate(b.date) - parseDate(a.date));
 
             updateKPIs();
             renderCharts();
+            renderSankeyChart();
             updateSimulatorUI();
             renderProjectionChart();
             currentPage = 1;
@@ -535,8 +665,14 @@
             return new Date(dateStr);
         }
 
-        function formatCurrency(val) {
-            return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(val);
+        // Formatação arredondada à unidade (€) para cartões e gráficos
+        function formatCurrencyRounded(val) {
+            return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(val));
+        }
+
+        // Formatação real com cêntimos (exclusiva para a tabela de transações detalhadas)
+        function formatCurrencyReal(val) {
+            return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
         }
 
         function updateKPIs() {
@@ -545,22 +681,27 @@
             let totalExpense = 0;
             let totalInvestments = 0;
 
-            filteredTransactions.forEach(t => {
+            // Saldo Total usa sempre o período todo (global)
+            globalTransactions.forEach(t => {
                 totalBalance += t.amount;
+            });
+
+            // Restantes KPIs respeitam os filtros ativos
+            filteredTransactions.forEach(t => {
                 if (t.category === 'Rend. Investimentos') {
                     totalInvestments += t.amount;
-                    totalIncome += t.amount;
-                } else if (t.amount > 0) {
+                }
+                if (t.amount > 0) {
                     totalIncome += t.amount;
                 } else {
                     totalExpense += Math.abs(t.amount);
                 }
             });
 
-            document.getElementById('kpi-balance').textContent = formatCurrency(totalBalance);
-            document.getElementById('kpi-income').textContent = formatCurrency(totalIncome);
-            document.getElementById('kpi-expense').textContent = formatCurrency(totalExpense);
-            document.getElementById('kpi-investments').textContent = formatCurrency(totalInvestments);
+            document.getElementById('kpi-balance').textContent = formatCurrencyRounded(totalBalance);
+            document.getElementById('kpi-income').textContent = formatCurrencyRounded(totalIncome);
+            document.getElementById('kpi-expense').textContent = formatCurrencyRounded(totalExpense);
+            document.getElementById('kpi-investments').textContent = formatCurrencyRounded(totalInvestments);
 
             document.getElementById('kpi-balance').className = totalBalance >= 0 ? 'text-2xl font-bold text-slate-900 mt-1' : 'text-2xl font-bold text-rose-600 mt-1';
         }
@@ -568,8 +709,8 @@
         function renderCharts() {
             renderMonthlyChart();
             renderBalanceChart();
+            renderIncomePieChart();
             renderExpensePieChart();
-            renderInvestmentPieChart();
         }
 
         function renderMonthlyChart() {
@@ -602,15 +743,36 @@
                 data: {
                     labels: sortedKeys,
                     datasets: [
-                        { label: 'Receitas', data: sortedKeys.map(k => monthlyData[k].income), backgroundColor: '#22c55e', borderRadius: 6 },
-                        { label: 'Despesas', data: sortedKeys.map(k => monthlyData[k].expense), backgroundColor: '#f43f5e', borderRadius: 6 }
+                        { label: 'Receitas', data: sortedKeys.map(k => Math.round(monthlyData[k].income)), backgroundColor: '#22c55e', borderRadius: 6 },
+                        { label: 'Despesas', data: sortedKeys.map(k => Math.round(monthlyData[k].expense)), backgroundColor: '#f43f5e', borderRadius: 6 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${formatCurrencyRounded(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyRounded(value);
+                                }
+                            }
+                        }, 
+                        x: { grid: { display: false } } 
+                    }
                 }
             });
         }
@@ -623,7 +785,7 @@
 
             sorted.forEach(t => {
                 running += t.amount;
-                timeline[t.date] = running;
+                timeline[t.date] = Math.round(running);
             });
 
             if (balanceChart) balanceChart.destroy();
@@ -646,129 +808,496 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: { y: { grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Saldo Acumulado: ${formatCurrencyRounded(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyRounded(value);
+                                }
+                            }
+                        }, 
+                        x: { grid: { display: false } } 
+                    }
+                }
+            });
+        }
+
+        function renderIncomePieChart() {
+            const ctx = document.getElementById('incomePieChart').getContext('2d');
+            const categorySums = {};
+
+            filteredTransactions.forEach(t => {
+                categorySums[t.category] = (categorySums[t.category] || 0) + t.amount;
+            });
+
+            const incomeCategories = {};
+            let totalInc = 0;
+
+            Object.entries(categorySums).forEach(([cat, sum]) => {
+                if (sum > 0.001) {
+                    incomeCategories[cat] = sum;
+                    totalInc += sum;
+                }
+            });
+
+            const filteredEntries = Object.entries(incomeCategories).filter(([cat, val]) => {
+                const percentage = totalInc > 0 ? (val / totalInc) * 100 : 0;
+                return percentage >= 0.05;
+            });
+
+            const labels = filteredEntries.map(e => e[0]);
+            const dataValues = filteredEntries.map(e => Math.round(e[1]));
+
+            if (incomePieChart) incomePieChart.destroy();
+
+            incomePieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues.length > 0 ? dataValues : [1],
+                        backgroundColor: generateDistinctColors(labels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '65%',
+                    plugins: { 
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 },
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const dataset = data.datasets[0];
+                                        const total = dataset.data.reduce((acc, val) => acc + val, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = dataset.data[i];
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                            return {
+                                                text: `${label} (${percentage})`,
+                                                fillStyle: dataset.backgroundColor[i],
+                                                strokeStyle: dataset.borderColor,
+                                                lineWidth: dataset.borderWidth,
+                                                hidden: isNaN(dataset.data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return ` ${context.label}: ${formatCurrencyRounded(value)}`;
+                                }
+                            }
+                        }
+                    } 
                 }
             });
         }
 
         function renderExpensePieChart() {
             const ctx = document.getElementById('expensePieChart').getContext('2d');
-            const expensesByCategory = {};
+            const categorySums = {};
 
             filteredTransactions.forEach(t => {
-                if (t.amount < 0 && t.category !== 'Rend. Investimentos') {
-                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + Math.abs(t.amount);
+                categorySums[t.category] = (categorySums[t.category] || 0) + t.amount;
+            });
+
+            const expenseCategories = {};
+            let totalExp = 0;
+
+            Object.entries(categorySums).forEach(([cat, sum]) => {
+                if (sum < -0.001) {
+                    let val = Math.abs(sum);
+                    expenseCategories[cat] = val;
+                    totalExp += val;
                 }
             });
+
+            const filteredEntries = Object.entries(expenseCategories).filter(([cat, val]) => {
+                const percentage = totalExp > 0 ? (val / totalExp) * 100 : 0;
+                return percentage >= 0.05;
+            });
+
+            const labels = filteredEntries.map(e => e[0]);
+            const dataValues = filteredEntries.map(e => Math.round(e[1]));
 
             if (expensePieChart) expensePieChart.destroy();
 
             expensePieChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(expensesByCategory),
+                    labels: labels,
                     datasets: [{
-                        data: Object.values(expensesByCategory),
-                        backgroundColor: ['#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#64748b'],
+                        data: dataValues.length > 0 ? dataValues : [1],
+                        backgroundColor: generateDistinctColors(labels.length),
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '65%',
+                    plugins: { 
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 },
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const dataset = data.datasets[0];
+                                        const total = dataset.data.reduce((acc, val) => acc + val, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = dataset.data[i];
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                            return {
+                                                text: `${label} (${percentage})`,
+                                                fillStyle: dataset.backgroundColor[i],
+                                                strokeStyle: dataset.borderColor,
+                                                lineWidth: dataset.borderWidth,
+                                                hidden: isNaN(dataset.data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return ` ${context.label}: ${formatCurrencyRounded(value)}`;
+                                }
+                            }
+                        }
+                    } 
+                }
             });
         }
 
-        function renderInvestmentPieChart() {
-            const ctx = document.getElementById('investmentPieChart').getContext('2d');
-            const investMap = {};
+        function renderSankeyChart() {
+            if (typeof google === 'undefined' || !google.visualization || !google.visualization.Sankey) return;
+            
+            const periodVal = document.getElementById('sankey-period').value;
+            
+            let maxDate = new Date(0);
+            globalTransactions.forEach(t => {
+                let d = parseDate(t.date);
+                if (d > maxDate) maxDate = d;
+            });
+            if (isNaN(maxDate.getTime())) maxDate = new Date();
 
-            filteredTransactions.forEach(t => {
-                if (t.category === 'Rend. Investimentos') {
-                    investMap[t.description] = (investMap[t.description] || 0) + t.amount;
+            const filtered = globalTransactions.filter(t => {
+                let tDate = parseDate(t.date);
+                if (periodVal === 'ALL') return true;
+                
+                let limit = new Date(maxDate);
+                if (periodVal === 'last_1m') limit.setMonth(limit.getMonth() - 1);
+                else if (periodVal === 'last_3m') limit.setMonth(limit.getMonth() - 3);
+                else if (periodVal === 'last_6m') limit.setMonth(limit.getMonth() - 6);
+                else if (periodVal === 'last_12m') limit.setFullYear(limit.getFullYear() - 1);
+                else if (periodVal === 'last_2y') limit.setFullYear(limit.getFullYear() - 2);
+
+                return tDate >= limit;
+            });
+
+            let minDate = new Date(maxDate);
+            filtered.forEach(t => {
+                let d = parseDate(t.date);
+                if (d < minDate) minDate = d;
+            });
+            
+            let diffMonths = Math.max(1, Math.round(Math.abs(maxDate - minDate) / (1000 * 60 * 60 * 24 * 30.44)));
+            if (periodVal === 'last_2y') diffMonths = 24;
+            else if (periodVal === 'last_12m') diffMonths = 12;
+            else if (periodVal === 'last_6m') diffMonths = 6;
+            else if (periodVal === 'last_3m') diffMonths = 3;
+            else if (periodVal === 'last_1m') diffMonths = 1;
+
+            let categoryTotals = {};
+            let sumTotalIncome = 0;
+            let sumTotalExpense = 0;
+
+            filtered.forEach(t => {
+                let cat = t.category || 'Outros';
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + t.amount;
+            });
+
+            let dataTableData = [];
+
+            Object.entries(categoryTotals).forEach(([cat, totalVal]) => {
+                let monthly = Math.round(Math.abs(totalVal) / diffMonths);
+                if (monthly > 0) {
+                    if (totalVal > 0) {
+                        sumTotalIncome += monthly;
+                        let label = `${cat} ${monthly} €`;
+                        dataTableData.push([label, '  ', monthly]);
+                    } else if (totalVal < 0) {
+                        sumTotalExpense += monthly;
+                        let label = `${monthly} € ${cat}`;
+                        dataTableData.push(['  ', label, monthly]);
+                    }
                 }
             });
 
-            const labels = Object.keys(investMap);
-            if (investmentPieChart) investmentPieChart.destroy();
+            // Atualiza os somatórios com margens maiores (px-28) para ficarem mais centrados em cima das barras do Sankey
+            document.getElementById('sankey-total-income').textContent = `Receitas: ${sumTotalIncome} €`;
+            document.getElementById('sankey-total-expense').textContent = `Despesas: ${sumTotalExpense} €`;
 
-            investmentPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels.length > 0 ? labels : ['Sem Investimentos'],
-                    datasets: [{
-                        data: labels.length > 0 ? Object.values(investMap) : [1],
-                        backgroundColor: ['#6366f1', '#a855f7', '#3b82f6', '#06b6d4', '#10b981'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
+            const loadingEl = document.getElementById('sankey_loading');
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            const data = new google.visualization.DataTable();
+            data.addColumn('string', 'From');
+            data.addColumn('string', 'To');
+            data.addColumn('number', 'Média Mensal (€)');
+            
+            if (dataTableData.length === 0) {
+                dataTableData.push(['Sem dados', 'Sem dados', 1]);
+            }
+            data.addRows(dataTableData);
+
+            const options = {
+                width: '100%',
+                height: '100%',
+                sankey: {
+                    node: {
+                        colors: ['#3b82f6', '#22c55e', '#eab308', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#94a3b8'],
+                        label: { fontName: 'sans-serif', fontSize: 12, color: '#1e293b', bold: true },
+                        nodePadding: 12,
+                        width: 16
+                    },
+                    link: {
+                        colorMode: 'source'
+                    }
+                }
+            };
+
+            const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));
+            chart.draw(data, options);
         }
 
         function renderProjectionChart() {
-            const ctx = document.getElementById('projectionChart').getContext('2d');
-            let baseGeneralIncome = 0, baseExpense = 0, baseInvestIncome = 0, currentBalance = 0;
+    const ctx = document.getElementById('projectionChart').getContext('2d');
+    
+    let currentBalanceGlobal = 0;
+    globalTransactions.forEach(t => {
+        currentBalanceGlobal += t.amount;
+    });
 
-            filteredTransactions.forEach(t => {
-                currentBalance += t.amount;
-                if (t.category === 'Rend. Investimentos') {
-                    baseInvestIncome += t.amount;
-                } else if (t.amount > 0) {
-                    baseGeneralIncome += t.amount;
-                } else {
-                    baseExpense += Math.abs(t.amount);
-                }
-            });
+    let maxDate = new Date(0);
+    globalTransactions.forEach(t => {
+        let d = parseDate(t.date);
+        if (d > maxDate) maxDate = d;
+    });
+    if (isNaN(maxDate.getTime())) maxDate = new Date();
 
-            const incGeneralRate = parseFloat(document.getElementById('input-inc-general').value) / 100;
-            const incExpenseRate = parseFloat(document.getElementById('input-inc-expense').value) / 100;
-            const incInvestRate = parseFloat(document.getElementById('input-inc-invest').value) / 100;
-            const numYears = parseInt(document.getElementById('proj-years').value);
+    let limitTwoYearsAgo = new Date(maxDate);
+    limitTwoYearsAgo.setFullYear(limitTwoYearsAgo.getFullYear() - 2);
 
-            let labels = ['Ano Atual'];
-            let projectionValues = [currentBalance];
-            let runningBalance = currentBalance;
-            let curGenInc = baseGeneralIncome, curExp = baseExpense, curInv = baseInvestIncome;
+    let sumGenIncome2Y = 0;
+    let sumExpense2Y = 0;
+    let countMonths2Y = 24;
 
-            for (let y = 1; y <= numYears; y++) {
-                if (y > 1) {
-                    curGenInc *= (1 + incGeneralRate);
-                    curExp *= (1 + incExpenseRate);
-                    curInv *= (1 + incInvestRate);
-                }
-                runningBalance += (curGenInc + curInv - curExp);
-                labels.push(`Ano +${y}`);
-                projectionValues.push(runningBalance);
+    let transLast2Y = globalTransactions.filter(t => {
+        let d = parseDate(t.date);
+        return d >= limitTwoYearsAgo && d <= maxDate;
+    });
+
+    let minDate2Y = new Date(maxDate);
+    transLast2Y.forEach(t => {
+        let d = parseDate(t.date);
+        if (d < minDate2Y) minDate2Y = d;
+    });
+
+    let diffTime2Y = Math.abs(maxDate - minDate2Y);
+    let calculatedMonths = Math.ceil(diffTime2Y / (1000 * 60 * 60 * 24 * 30.44));
+    if (calculatedMonths > 0 && calculatedMonths <= 24) {
+        countMonths2Y = calculatedMonths;
+    }
+
+    transLast2Y.forEach(t => {
+        // Ignoramos a categoria 'Rend. Investimentos' no fluxo base pois o retorno é gerado pelo próprio património acumulado (juro composto)
+        if (t.category !== 'Rend. Investimentos') {
+            if (t.amount > 0) {
+                sumGenIncome2Y += t.amount;
+            } else {
+                sumExpense2Y += Math.abs(t.amount);
             }
-
-            document.getElementById('proj-current-balance').textContent = formatCurrency(currentBalance);
-            document.getElementById('proj-final-balance').textContent = formatCurrency(runningBalance);
-            const diff = runningBalance - currentBalance;
-            const pct = currentBalance !== 0 ? (diff / Math.abs(currentBalance)) * 100 : 0;
-            document.getElementById('proj-growth').textContent = `${diff >= 0 ? '+' : ''}${formatCurrency(diff)} (${pct.toFixed(1)}%)`;
-
-            if (projectionChart) projectionChart.destroy();
-
-            projectionChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Projeção de Saldo Futuro',
-                        data: projectionValues,
-                        borderColor: '#16a34a',
-                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#16a34a'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
-            });
         }
+    });
+
+    let baseGeneralIncome = (sumGenIncome2Y / countMonths2Y) * 12;
+    let baseExpense = (sumExpense2Y / countMonths2Y) * 12;
+
+    const incGeneralRate = (parseFloat(document.getElementById('input-inc-general')?.value) || 2.5) / 100;
+    const incExpenseRate = (parseFloat(document.getElementById('input-inc-expense')?.value) || 2.5) / 100;
+    const incInvestRate = (parseFloat(document.getElementById('input-inc-invest')?.value) || 10) / 100;
+
+    const now = new Date();
+    const startYear = now.getFullYear();
+    const endYear = 2060;
+    
+    let labels = [];
+    let projectionValues = [];
+    let genIncomeValues = [];
+    let expenseValues = [];
+    let investIncomeValues = [];
+
+    let runningBalance = currentBalanceGlobal;
+    
+    let curGenInc = baseGeneralIncome;
+    let curExp = baseExpense;
+
+    let fireYearFound = null;
+
+    for (let yr = startYear; yr <= endYear; yr++) {
+        // Regra FIRE: O rendimento passivo do ano (saldo * taxa de investimento) é maior que as despesas do ano
+        let annualPassiveReturn = runningBalance * incInvestRate;
+        if (!fireYearFound && annualPassiveReturn > curExp && yr > startYear) {
+            fireYearFound = yr;
+        }
+
+        labels.push(yr.toString());
+        projectionValues.push(Math.round(runningBalance));
+        genIncomeValues.push(Math.round(curGenInc));
+        expenseValues.push(Math.round(curExp));
+        investIncomeValues.push(Math.round(annualPassiveReturn));
+
+        // Atualização das variáveis para o ano seguinte
+        if (yr > startYear) {
+            curGenInc *= (1 + incGeneralRate);
+            curExp *= (1 + incExpenseRate);
+        }
+        
+        // Aplicação da fórmula exata do saldo:
+        // Saldo do próximo ano = (Saldo Anterior + Receitas Gerais - Despesas) * (1 + Taxa de Investimento)
+        let netCashflow = curGenInc - curExp;
+        runningBalance = (runningBalance + netCashflow) * (1 + incInvestRate);
+    }
+
+    document.getElementById('proj-current-balance').textContent = formatCurrencyRounded(currentBalanceGlobal);
+    document.getElementById('proj-final-balance').textContent = formatCurrencyRounded(projectionValues[projectionValues.length - 1]);
+    
+    const fireStatusEl = document.getElementById('proj-fire-status');
+    if (fireYearFound) {
+        fireStatusEl.innerHTML = `<i class="fa-solid fa-fire text-amber-400"></i> Atinge FIRE em <span class="text-white font-bold">${fireYearFound}</span>!`;
+    } else {
+        fireStatusEl.innerHTML = `Não atingido até 2060 com os parâmetros atuais.`;
+    }
+
+    if (projectionChart) projectionChart.destroy();
+
+    const fireAnnotationPlugin = {
+        id: 'fireAnnotation',
+        afterDraw: (chart) => {
+            if (!fireYearFound) return;
+            const ctx = chart.ctx;
+            const xAxis = chart.scales.x;
+            const yAxis = chart.scales.y;
+            
+            const xPos = xAxis.getPixelForValue(fireYearFound.toString());
+            if (xPos === undefined) return;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(xPos, yAxis.top);
+            ctx.lineTo(xPos, yAxis.bottom);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`🔥 FIRE (${fireYearFound})`, xPos, yAxis.top + 20);
+            ctx.restore();
+        }
+    };
+
+    projectionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Projeção de Saldo até 2060 (Média 2 Anos)',
+                data: projectionValues,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+                pointBackgroundColor: '#16a34a'
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'bottom' },
+                datalabels: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const i = context.dataIndex;
+                            return [
+                                ` Saldo: ${formatCurrencyRounded(projectionValues[i])}`,
+                                ` Receitas Gerais: ${formatCurrencyRounded(genIncomeValues[i])}`,
+                                ` Despesas: ${formatCurrencyRounded(expenseValues[i])}`,
+                                ` Rend. Investimentos (10%): ${formatCurrencyRounded(investIncomeValues[i])}`
+                            ];
+                        }
+                    }
+                }
+            }, 
+            scales: { 
+                y: { 
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatCurrencyRounded(value);
+                        }
+                    }
+                }, 
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } 
+            } 
+        },
+        plugins: [fireAnnotationPlugin]
+    });
+}
 
         function renderTable() {
             const tbody = document.getElementById('transactions-tbody');
@@ -803,7 +1332,7 @@
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs">${t.category}</span></td>
                         <td class="py-3 px-4 text-slate-500 text-xs">${t.subcategory}</td>
                         <td class="py-3 px-4 text-right font-mono font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}">
-                            ${isPositive ? '+' : ''}${formatCurrency(t.amount)}
+                            ${isPositive ? '+' : ''}${formatCurrencyReal(t.amount)}
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -824,6 +1353,7 @@
             if (searchTerm) {
                 dataToDisplay = filteredTransactions.filter(t => 
                     t.description.toLowerCase().includes(searchTerm) ||
+                    t.category.toLowerCase().assets?.toLowerCase().includes(searchTerm) ||
                     t.category.toLowerCase().includes(searchTerm) ||
                     t.subcategory.toLowerCase().includes(searchTerm)
                 );
