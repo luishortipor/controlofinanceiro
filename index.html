@@ -226,9 +226,11 @@
             <div id="sankey_loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
                 <i class="fa-solid fa-spinner fa-spin text-xl text-brand-600"></i> A calcular diagrama de fluxos...
             </div>
-            <!-- Adicionado overflow-x-auto para telemóveis -->
+            <!-- Contentor responsivo com escala automática para telemóveis na vertical -->
             <div class="w-full overflow-x-auto">
-                <div id="sankey_chart" class="w-full min-w-[500px] h-[320px] md:h-[400px]"></div>
+                <div class="w-full min-w-[320px] sm:min-w-[500px] h-[300px] md:h-[400px]">
+                    <div id="sankey_chart" class="w-full h-full"></div>
+                </div>
             </div>
         </section>
 
@@ -354,7 +356,7 @@
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 renderSankeyChart();
-            }, 250); // Aguarda 250ms após o fim do resize para desenhar, evitando sobrecarga
+            }, 200);
         });
 
         // Plugin customizado do Chart.js para desenhar o TOTAL arredondado no centro exato do Doughnut chart
