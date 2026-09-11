@@ -397,12 +397,12 @@
 
         // Fallback de dados de exemplo
         const defaultRawData = [
-            { date: "31/08/2026", description: "Carreira 28", category: "Restauração", amount: -3.25, subcategory: "Black Plus Luís" },
-            { date: "31/08/2026", description: "Cartão Dá Compras", category: "Compras", amount: -96.73, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Compras Saldo Continente", category: "Compras", amount: -202.60, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "ETF", category: "Rend. Investimentos", amount: 3500.56, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Galp", category: "Gasóleo/Gasolina", amount: -44.66, subcategory: "Black Plus Cele..." },
-            { date: "31/08/2026", description: "PPR", category: "Rend. Investimentos", amount: 1584.22, subcategory: "Millennium" }
+            { date: "31/08/2026", description: "Teste", category: "Restauração", amount: -3.25, subcategory: "Banco 1" },
+            { date: "31/08/2026", description: "Teste", category: "Compras", amount: -96.73, subcategory: "Banco 1" },
+            { date: "31/08/2026", description: "Teste 3", category: "Compras", amount: -202.60, subcategory: "Banco 2" },
+            { date: "31/08/2026", description: "Teste 4", category: "Rend. Investimentos", amount: 3500.56, subcategory: "Banco 2" },
+            { date: "31/08/2026", description: "Teste 5", category: "Gasóleo/Gasolina", amount: -44.66, subcategory: "Banco 1" },
+            { date: "31/08/2026", description: "Teste 6", category: "Rend. Investimentos", amount: 1584.22, subcategory: "Banco 2" }
         ];
 
         let globalTransactions = [...defaultRawData];
@@ -463,11 +463,20 @@
             const parsed = rawJson.map(row => {
                 const keys = Object.keys(row);
                 
+                // Procura flexível para a coluna da Data
                 let dateKey = keys.find(k => /date|data/i.test(k)) || keys[0];
-                let descKey = keys.find(k => /desc|who|nome|descricao/i.test(k)) || keys[1];
+                
+                // Procura flexível para Descrição (Descricao, Movimento, Transacao, etc.)
+                let descKey = keys.find(k => /desc|who|nome|movimento|transa[cç][aã]o|descricao/i.test(k)) || keys[1];
+                
+                // Procura flexível para Categoria
                 let catKey = keys.find(k => /cat/i.test(k)) || keys[2];
+                
+                // Procura flexível para Valor (Amount, Signed, Montante, Valor, etc.)
                 let amtKey = keys.find(k => /amount|signed|montante|valor/i.test(k)) || keys[3];
-                let subKey = keys.find(k => /sub/i.test(k)) || keys[4];
+                
+                // Procura flexível para Subcategoria / Banco / Cartão
+                let subKey = keys.find(k => /sub|cart[aã]o|banco/i.test(k)) || keys[4];
 
                 let rawAmt = row[amtKey];
                 let amountNum = 0;
