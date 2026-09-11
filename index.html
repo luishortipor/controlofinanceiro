@@ -37,6 +37,31 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
 
+    <!-- Ecrã de Login (Proteção) -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-96 text-center">
+            <h2 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-lock text-emerald-600 mr-2"></i>Área Protegida</h2>
+            <p class="text-sm text-slate-600 mb-4">Introduz a palavra-passe para carregar os dados financeiros.</p>
+            <input type="password" id="login-pass" placeholder="Palavra-passe" class="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500" onkeydown="if(event.key === 'Enter') verificarPassword()">
+            <button onclick="verificarPassword()" class="w-full bg-emerald-600 text-white font-semibold py-2 rounded-lg hover:bg-emerald-700 transition">Entrar</button>
+            <p id="login-error" class="text-red-500 text-xs mt-2 hidden">Palavra-passe incorreta.</p>
+        </div>
+    </div>
+
+    <script>
+        function verificarPassword() {
+            const passInput = document.getElementById('login-pass').value;
+            const passwordCorreta = "imo"; // Altera aqui para a tua password
+
+            if (passInput === passwordCorreta) {
+                document.getElementById('login-screen').style.display = 'none';
+                // Podes chamar aqui a função que inicializa os teus dados do GitHub/Excel, se necessário
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+    </script>
+
     <!-- Header -->
     <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -70,7 +95,7 @@
         <!-- Filters Section -->
         <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Data</label>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Período</label>
                 <select id="filter-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                     <option value="ALL">Todo o Histórico</option>
                     <option value="last_1m">Último Mês</option>
@@ -115,7 +140,7 @@
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Rendimentos</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Rendimentos (Período)</p>
                     <h3 id="kpi-income" class="text-2xl font-bold text-emerald-600 mt-1">0 €</h3>
                     <span id="kpi-income-sub" class="text-xs text-slate-500"></span>
                 </div>
@@ -126,7 +151,7 @@
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Despesas</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Despesas (Período)</p>
                     <h3 id="kpi-expense" class="text-2xl font-bold text-rose-600 mt-1">0 €</h3>
                     <span id="kpi-expense-sub" class="text-xs text-slate-500"></span>
                 </div>
@@ -137,7 +162,7 @@
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rend. Investimentos</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rend. Investimentos (Período)</p>
                     <h3 id="kpi-investments" class="text-2xl font-bold text-indigo-600 mt-1">0 €</h3>
                     <span id="kpi-investments-sub" class="text-xs text-slate-500"></span>
                 </div>
@@ -151,7 +176,7 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Evolução Mensal (Receitas vs Despesas)</h3>
+                    <h3 class="font-bold text-slate-800 text-base">Evolução Mensal</h3>
                     <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full">
@@ -198,9 +223,9 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                        Fluxo Financeiro
+                        Fluxo Financeiro Mensal
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Médias mensais por categoria (Receitas à esquerda, Despesas à direita).</p>
+                    <p class="text-xs text-slate-500 mt-0.5"></p>
                 </div>
                 <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
                     <label for="sankey-period" class="text-xs font-semibold text-slate-600 uppercase tracking-wider pl-1">Período:</label>
@@ -230,30 +255,30 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Simulador de Projeção de Saldo Futuro (Até 2060)
+                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Previsão de Saldo
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Simula o crescimento patrimonial com base estrita nas médias mensais dos últimos 2 anos.</p>
+                    <p class="text-xs text-slate-500 mt-0.5"></p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Rendimentos Gerais</span>
+                        <span>Aumento anual de receitas</span>
                         <span id="val-inc-general" class="text-brand-600 font-mono">2.5%</span>
                     </label>
                     <input type="range" id="input-inc-general" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Despesas</span>
+                        <span>Aumento anual de despesas</span>
                         <span id="val-inc-expense" class="text-rose-600 font-mono">2.5%</span>
                     </label>
                     <input type="range" id="input-inc-expense" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Rend. Investimentos</span>
+                        <span>Rendimento anual dos investimentos</span>
                         <span id="val-inc-invest" class="text-indigo-600 font-mono">10.0%</span>
                     </label>
                     <input type="range" id="input-inc-invest" min="-50" max="100" step="0.5" value="10" class="w-full accent-indigo-600 cursor-pointer">
@@ -1253,7 +1278,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Projeção de Saldo até 2060 (Média 2 Anos)',
+                label: 'Projeção de Saldo (com base nos últimos 2 anos)',
                 data: projectionValues,
                 borderColor: '#16a34a',
                 backgroundColor: 'rgba(22, 163, 74, 0.1)',
