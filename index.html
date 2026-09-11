@@ -239,15 +239,18 @@
                     </select>
                 </div>
             </div>
-            <!-- Totais alinhados mais para o centro do gráfico Sankey -->
-            <div class="grid grid-cols-2 px-52 pt-2 font-bold text-base text-slate-800">
-                <div id="sankey-total-income" class="text-left">Receitas: 0 €</div>
-                <div id="sankey-total-expense" class="text-right">Despesas: 0 €</div>
+            <!-- Totais perfeitamente alinhados e centrados sobre as colunas do Sankey -->
+            <div class="max-w-4xl mx-auto grid grid-cols-2 px-4 pt-2 font-bold text-sm md:text-base text-slate-800">
+                <div id="sankey-total-income" class="text-left pl-4 md:pl-12">Receitas: 0 €</div>
+                <div id="sankey-total-expense" class="text-right pr-4 md:pr-12">Despesas: 0 €</div>
             </div>
             <div id="sankey_loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
                 <i class="fa-solid fa-spinner fa-spin text-xl text-brand-600"></i> A calcular diagrama de fluxos...
             </div>
-            <div id="sankey_chart" class="w-full h-[400px]"></div>
+            <!-- Adicionado overflow-x-auto para telemóveis -->
+            <div class="w-full overflow-x-auto">
+                <div id="sankey_chart" class="w-full min-w-[500px] h-[320px] md:h-[400px]"></div>
+            </div>
         </section>
 
         <!-- Future Balance Projection Simulator Section -->
@@ -359,11 +362,20 @@
         // Registar o plugin de Datalabels para o Chart.js
         Chart.register(ChartDataLabels);
 
-        // Inicializar o Google Charts para renderização do diagrama de Sankey
+        // Inicializar o Google Charts para renderização do diagrama de Sankey com suporte a responsividade
         google.charts.load('current', {packages:['sankey']});
         google.charts.setOnLoadCallback(() => {
             document.getElementById('sankey-period').addEventListener('change', renderSankeyChart);
             renderSankeyChart();
+        });
+
+        // Adicionar redimensionamento automático do Sankey quando a janela muda de tamanho ou rotação do ecrã
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderSankeyChart();
+            }, 250); // Aguarda 250ms após o fim do resize para desenhar, evitando sobrecarga
         });
 
         // Plugin customizado do Chart.js para desenhar o TOTAL arredondado no centro exato do Doughnut chart
