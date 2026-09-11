@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-tight">Dashboard Financeiro Pessoal</h1>
-                    <p class="text-[11px] text-slate-400">Análise de Despesas, Rendimentos e Projeções Futuras</p>
+                    <p class="text-[11px] text-slate-400">Análise de Despesas, Receitas e Projeções Futuras</p>
                 </div>
             </div>
             
@@ -119,7 +119,7 @@
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Rendimentos (Período)</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Receitas (Período)</p>
                     <h3 id="kpi-income" class="text-2xl font-bold text-emerald-600 mt-1">0 €</h3>
                     <span id="kpi-income-sub" class="text-xs text-slate-500"></span>
                 </div>
@@ -155,7 +155,7 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Evolução Mensal</h3>
+                    <h3 class="font-bold text-slate-800 text-base">Receitas vs Despesas</h3>
                     <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full">
@@ -165,7 +165,7 @@
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Evolução do Saldo Acumulado</h3>
+                    <h3 class="font-bold text-slate-800 text-base">Saldo Acumulado</h3>
                     <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full">
@@ -178,7 +178,7 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Rendimentos por Categoria</h3>
+                    <h3 class="font-bold text-slate-800 text-base">Receitas por Categoria</h3>
                     <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full flex items-center justify-center">
@@ -188,7 +188,7 @@
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Despesas por Categoria</h3>
+                    <h3 class="font-bold text-slate-800 text-base">Despesas por Categoria</h3>
                     <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md"></span>
                 </div>
                 <div class="relative h-72 w-full flex items-center justify-center">
@@ -251,21 +251,24 @@
                         <span>Aumento anual de receitas</span>
                         <span id="val-inc-general" class="text-brand-600 font-mono">2.5%</span>
                     </label>
-                    <input type="range" id="input-inc-general" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
+                    <!-- Ajustado para min 0, max 10, passo de 0.5 -->
+                    <input type="range" id="input-inc-general" min="0" max="10" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>Aumento anual de despesas</span>
                         <span id="val-inc-expense" class="text-rose-600 font-mono">2.5%</span>
                     </label>
-                    <input type="range" id="input-inc-expense" min="-20" max="50" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
+                    <!-- Ajustado para min 0, max 10, passo de 0.5 -->
+                    <input type="range" id="input-inc-expense" min="0" max="10" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>Rendimento anual dos investimentos</span>
                         <span id="val-inc-invest" class="text-indigo-600 font-mono">10.0%</span>
                     </label>
-                    <input type="range" id="input-inc-invest" min="-50" max="100" step="0.5" value="10" class="w-full accent-indigo-600 cursor-pointer">
+                    <!-- Ajustado para min -20, max 50, passo de 1 -->
+                    <input type="range" id="input-inc-invest" min="-20" max="50" step="1" value="10" class="w-full accent-indigo-600 cursor-pointer">
                 </div>
             </div>
 
@@ -427,6 +430,37 @@
                 colors.push(`hsl(${hue}, 75%, 55%)`);
             }
             return colors;
+        }
+
+        // Esbate uma cor hsl(...) para um hsla(...) com opacidade reduzida
+        function dimHslColor(hslColor, alpha) {
+            const match = /^hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)$/.exec(hslColor);
+            if (!match) return hslColor;
+            return `hsla(${match[1]}, ${match[2]}%, ${match[3]}%, ${alpha})`;
+        }
+
+        // Handlers genéricos: ao passar o rato na legenda, realça a fatia correspondente
+        // e esbate as restantes; ao sair, repõe as cores originais.
+        function pieLegendOnHover(event, legendItem, legend) {
+            const chart = legend.chart;
+            const index = legendItem.index;
+            const dataset = chart.data.datasets[0];
+            if (!dataset._originalColors) {
+                dataset._originalColors = dataset.backgroundColor.slice();
+            }
+            dataset.backgroundColor = dataset._originalColors.map((c, i) => i === index ? c : dimHslColor(c, 0.15));
+            chart.setActiveElements([{ datasetIndex: 0, index: index }]);
+            chart.update();
+        }
+
+        function pieLegendOnLeave(event, legendItem, legend) {
+            const chart = legend.chart;
+            const dataset = chart.data.datasets[0];
+            if (dataset._originalColors) {
+                dataset.backgroundColor = dataset._originalColors.slice();
+            }
+            chart.setActiveElements([]);
+            chart.update();
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -626,50 +660,23 @@
             const selCat = document.getElementById('filter-category').value;
             const selSub = document.getElementById('filter-subcategory').value;
 
-            let maxDate = new Date(0);
-            globalTransactions.forEach(t => {
-                let d = parseDate(t.date);
-                if (d > maxDate) maxDate = d;
-            });
-            if (isNaN(maxDate.getTime())) maxDate = new Date();
-
-            filteredTransactions = globalTransactions.filter(t => {
-                let tDate = parseDate(t.date);
-                let matchDate = true;
-
-                if (dateFilterVal.startsWith('year_')) {
-                    let targetYear = dateFilterVal.replace('year_', '');
+            // 1. Aplica o filtro de período por meses completos (ou por ano específico se for o caso)
+            let dateFiltered = [];
+            if (dateFilterVal.startsWith('year_')) {
+                let targetYear = dateFilterVal.replace('year_', '');
+                dateFiltered = globalTransactions.filter(t => {
                     let yearStr = t.date.split('/').pop() || t.date.substring(0, 4);
-                    matchDate = (yearStr === targetYear);
-                } else if (dateFilterVal === 'last_1m') {
-                    let limit = new Date(maxDate);
-                    limit.setMonth(limit.getMonth() - 1);
-                    matchDate = (tDate >= limit);
-                } else if (dateFilterVal === 'last_3m') {
-                    let limit = new Date(maxDate);
-                    limit.setMonth(limit.getMonth() - 3);
-                    matchDate = (tDate >= limit);
-                } else if (dateFilterVal === 'last_6m') {
-                    let limit = new Date(maxDate);
-                    limit.setMonth(limit.getMonth() - 6);
-                    matchDate = (tDate >= limit);
-                } else if (dateFilterVal === 'last_12m') {
-                    let limit = new Date(maxDate);
-                    limit.setFullYear(limit.getFullYear() - 1);
-                    matchDate = (tDate >= limit);
-                } else if (dateFilterVal === 'last_2y') {
-                    let limit = new Date(maxDate);
-                    limit.setFullYear(limit.getFullYear() - 2);
-                    matchDate = (tDate >= limit);
-                } else if (dateFilterVal === 'last_5y') {
-                    let limit = new Date(maxDate);
-                    limit.setFullYear(limit.getFullYear() - 5);
-                    matchDate = (tDate >= limit);
-                }
+                    return yearStr === targetYear;
+                });
+            } else {
+                dateFiltered = getFilteredTransactionsByPeriod(globalTransactions, dateFilterVal);
+            }
 
+            // 2. Aplica os restantes filtros (Categoria e Subcategoria)
+            filteredTransactions = dateFiltered.filter(t => {
                 let matchCat = (selCat === 'ALL' || t.category === selCat);
                 let matchSub = (selSub === 'ALL' || t.subcategory === selSub);
-                return matchDate && matchCat && matchSub;
+                return matchCat && matchSub;
             });
 
             filteredTransactions.sort((a, b) => parseDate(b.date) - parseDate(a.date));
@@ -690,6 +697,33 @@
                 return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
             }
             return new Date(dateStr);
+        }
+
+function getFilteredTransactionsByPeriod(transactions, periodValue) {
+            if (periodValue === 'ALL') return transactions;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth(); // 0 a 11 (Setembro = 8)
+
+            // Fim: último dia do mês anterior (ex: 31 de Agosto de 2026)
+            const endDate = new Date(currentYear, currentMonth, 0); 
+
+            let monthsBack = 1;
+            if (periodValue === 'last_1m') monthsBack = 1;
+            else if (periodValue === 'last_3m') monthsBack = 3;
+            else if (periodValue === 'last_6m') monthsBack = 6;
+            else if (periodValue === 'last_12m') monthsBack = 12;
+            else if (periodValue === 'last_2y') monthsBack = 24;
+            else if (periodValue === 'last_5y') monthsBack = 60;
+
+            // Início: primeiro dia de N meses atrás
+            const startDate = new Date(currentYear, currentMonth - monthsBack, 1);
+
+            return transactions.filter(t => {
+                const tDate = parseDate(t.date);
+                return tDate >= startDate && tDate <= endDate;
+            });
         }
 
         // Formatação arredondada à unidade (€) para cartões e gráficos
@@ -806,24 +840,87 @@
 
         function renderBalanceChart() {
             const ctx = document.getElementById('balanceChart').getContext('2d');
-            const sorted = [...filteredTransactions].sort((a,b) => parseDate(a.date) - parseDate(b.date));
-            const timeline = {};
-            let running = 0;
-
-            sorted.forEach(t => {
-                running += t.amount;
-                timeline[t.date] = Math.round(running);
+            
+            // 1. Calcular o saldo acumulado de TODO o histórico global ordenado por data
+            const allSorted = [...globalTransactions].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+            
+            let globalRunning = 0;
+            const globalTimeline = [];
+            
+            allSorted.forEach(t => {
+                globalRunning += t.amount;
+                globalTimeline.unshift({ // Guarda do mais recente para o mais antigo para facilitar a busca do ponto de partida
+                    dateObj: parseDate(t.date),
+                    dateStr: t.date,
+                    balance: globalRunning
+                });
             });
+
+            // 2. Obter o período selecionado atualmente no filtro do topo
+            const dateFilterVal = document.getElementById('filter-date').value;
+            
+            let startDate = null;
+            let endDate = null;
+
+            if (dateFilterVal.startsWith('year_')) {
+                let targetYear = dateFilterVal.replace('year_', '');
+                startDate = new Date(`${targetYear}-01-01`);
+                endDate = new Date(`${targetYear}-12-31`);
+            } else if (dateFilterVal !== 'ALL') {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
+                
+                endDate = new Date(currentYear, currentMonth, 0); // Último dia do mês anterior
+
+                let monthsBack = 1;
+                if (dateFilterVal === 'last_1m') monthsBack = 1;
+                else if (dateFilterVal === 'last_3m') monthsBack = 3;
+                else if (dateFilterVal === 'last_6m') monthsBack = 6;
+                else if (dateFilterVal === 'last_12m') monthsBack = 12;
+                else if (dateFilterVal === 'last_2y') monthsBack = 24;
+                else if (dateFilterVal === 'last_5y') monthsBack = 60;
+
+                startDate = new Date(currentYear, currentMonth - monthsBack, 1);
+            }
+
+            // 3. Encontrar o saldo inicial exato imediatamente antes da data de início do período
+            let initialBalance = 0;
+            if (startDate) {
+                // Procura a transação mais recente anterior à data de início
+                const priorTrans = globalTimeline.find(item => item.dateObj < startDate);
+                if (priorTrans) {
+                    initialBalance = priorTrans.balance;
+                }
+            }
+
+            // 4. Filtrar as transações que pertencem estritamente ao período selecionado
+            const periodTransactions = filteredTransactions.slice().sort((a, b) => parseDate(a.date) - parseDate(b.date));
+
+            const labels = [];
+            const dataPoints = [];
+            
+            let currentRunning = initialBalance;
+
+            // Adiciona um ponto inicial "virtual" no primeiro dia se houver transações, para o gráfico começar logo no valor correto
+            if (periodTransactions.length > 0) {
+                // Se quisermos que o gráfico reflita o saldo acumulado progressivo do período:
+                periodTransactions.forEach(t => {
+                    currentRunning += t.amount;
+                    labels.push(t.date);
+                    dataPoints.push(Math.round(currentRunning));
+                });
+            }
 
             if (balanceChart) balanceChart.destroy();
 
             balanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Object.keys(timeline),
+                    labels: labels,
                     datasets: [{
                         label: 'Saldo Acumulado',
-                        data: Object.values(timeline),
+                        data: dataPoints,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
@@ -897,7 +994,8 @@
                         data: dataValues.length > 0 ? dataValues : [1],
                         backgroundColor: generateDistinctColors(labels.length),
                         borderWidth: 2,
-                        borderColor: '#ffffff'
+                        borderColor: '#ffffff',
+                        hoverOffset: 8 // <-- ADICIONA ESTA LINHA PARA A FATIA EXPANDIR NO HOVER
                     }]
                 },
                 options: { 
@@ -907,6 +1005,8 @@
                     plugins: { 
                         legend: { 
                             position: 'right',
+                            onHover: pieLegendOnHover,
+                            onLeave: pieLegendOnLeave,
                             labels: {
                                 boxWidth: 12,
                                 font: { size: 11 },
@@ -983,7 +1083,8 @@
                         data: dataValues.length > 0 ? dataValues : [1],
                         backgroundColor: generateDistinctColors(labels.length),
                         borderWidth: 2,
-                        borderColor: '#ffffff'
+                        borderColor: '#ffffff',
+                        hoverOffset: 8 // <-- ADICIONA ESTA LINHA PARA A FATIA EXPANDIR NO HOVER
                     }]
                 },
                 options: { 
@@ -993,6 +1094,8 @@
                     plugins: { 
                         legend: { 
                             position: 'right',
+                            onHover: pieLegendOnHover,
+                            onLeave: pieLegendOnLeave,
                             labels: {
                                 boxWidth: 12,
                                 font: { size: 11 },
@@ -1037,39 +1140,26 @@
             
             const periodVal = document.getElementById('sankey-period').value;
             
-            let maxDate = new Date(0);
-            globalTransactions.forEach(t => {
-                let d = parseDate(t.date);
-                if (d > maxDate) maxDate = d;
-            });
-            if (isNaN(maxDate.getTime())) maxDate = new Date();
+            // Usa a mesma função de meses completos para o Sankey
+            const filtered = getFilteredTransactionsByPeriod(globalTransactions, periodVal);
 
-            const filtered = globalTransactions.filter(t => {
-                let tDate = parseDate(t.date);
-                if (periodVal === 'ALL') return true;
-                
-                let limit = new Date(maxDate);
-                if (periodVal === 'last_1m') limit.setMonth(limit.getMonth() - 1);
-                else if (periodVal === 'last_3m') limit.setMonth(limit.getMonth() - 3);
-                else if (periodVal === 'last_6m') limit.setMonth(limit.getMonth() - 6);
-                else if (periodVal === 'last_12m') limit.setFullYear(limit.getFullYear() - 1);
-                else if (periodVal === 'last_2y') limit.setFullYear(limit.getFullYear() - 2);
-
-                return tDate >= limit;
-            });
-
-            let minDate = new Date(maxDate);
-            filtered.forEach(t => {
-                let d = parseDate(t.date);
-                if (d < minDate) minDate = d;
-            });
-            
-            let diffMonths = Math.max(1, Math.round(Math.abs(maxDate - minDate) / (1000 * 60 * 60 * 24 * 30.44)));
+            // Calcula a quantidade de meses para fazer a média mensal correta
+            let diffMonths = 1;
             if (periodVal === 'last_2y') diffMonths = 24;
             else if (periodVal === 'last_12m') diffMonths = 12;
             else if (periodVal === 'last_6m') diffMonths = 6;
             else if (periodVal === 'last_3m') diffMonths = 3;
             else if (periodVal === 'last_1m') diffMonths = 1;
+            else if (periodVal === 'ALL') {
+                // Se for todo o histórico, calcula com base na diferença real de meses
+                let maxDate = new Date(0), minDate = new Date();
+                globalTransactions.forEach(t => {
+                    let d = parseDate(t.date);
+                    if (d > maxDate) maxDate = d;
+                    if (d < minDate) minDate = d;
+                });
+                diffMonths = Math.max(1, Math.round(Math.abs(maxDate - minDate) / (1000 * 60 * 60 * 24 * 30.44)));
+            }
 
             let categoryTotals = {};
             let sumTotalIncome = 0;
@@ -1079,6 +1169,8 @@
                 let cat = t.category || 'Outros';
                 categoryTotals[cat] = (categoryTotals[cat] || 0) + t.amount;
             });
+
+            
 
             let dataTableData = [];
 
