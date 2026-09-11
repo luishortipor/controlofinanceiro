@@ -37,30 +37,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
 
-    <!-- Ecrã de Login (Proteção) -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-96 text-center">
-            <h2 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-lock text-emerald-600 mr-2"></i>Área Protegida</h2>
-            <p class="text-sm text-slate-600 mb-4">Introduz a palavra-passe para carregar os dados financeiros.</p>
-            <input type="password" id="login-pass" placeholder="Palavra-passe" class="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500" onkeydown="if(event.key === 'Enter') verificarPassword()">
-            <button onclick="verificarPassword()" class="w-full bg-emerald-600 text-white font-semibold py-2 rounded-lg hover:bg-emerald-700 transition">Entrar</button>
-            <p id="login-error" class="text-red-500 text-xs mt-2 hidden">Palavra-passe incorreta.</p>
-        </div>
-    </div>
+    
 
-    <script>
-        function verificarPassword() {
-            const passInput = document.getElementById('login-pass').value;
-            const passwordCorreta = "imo"; // Altera aqui para a tua password
-
-            if (passInput === passwordCorreta) {
-                document.getElementById('login-screen').style.display = 'none';
-                // Podes chamar aqui a função que inicializa os teus dados do GitHub/Excel, se necessário
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-    </script>
+    
 
     <!-- Header -->
     <header class="bg-slate-900 text-white shadow-lg">
