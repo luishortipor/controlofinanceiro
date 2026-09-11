@@ -3,936 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro Avançado</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
+    <title>Dashboard de Produtividade Agrícola</title>
+    
+    <!-- Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS for Excel parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            900: '#14532d',
-                        }
-                    }
-                }
+    
+    <!-- SheetJS (xlsx) para ler ficheiros Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --warning: #d35400;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            line-height: 1.25;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--warning);
+            font-weight: bold;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .dashboard-content {
+            display: none; /* Só aparece depois de carregar os dados */
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 180px;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.95rem;
+            color: #777;
+        }
+
+        .card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .grid-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-charts {
+                grid-template-columns: 1fr;
             }
         }
-    </script>
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .chart-card h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
+<body>
 
-    <!-- Header -->
-    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-brand-500 p-2.5 rounded-xl text-white shadow-md">
-                    <i class="fa-solid fa-chart-pie text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight">Dashboard Financeiro Pessoal</h1>
-                    <p class="text-xs text-slate-400">Análise de Despesas, Rendimentos e Projeções Futuras</p>
-                </div>
-            </div>
-            
-            <!-- Data Source & Controls -->
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs flex items-center gap-2">
-                    <span id="datasource-status" class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="datasource-text" class="text-slate-300">Dados Embutidos Ativos</span>
-                </div>
-                <label class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-excel"></i> Carregar Excel GitHub/Local
-                    <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls, .csv">
-                </label>
-            </div>
-        </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Dashboard de Produtividade Agrícola</h1>
+            <span id="status-conexao" style="font-size: 0.85rem; color: #27ae60;">● Pronto</span>
+        </header>
+        
+        <div id="loading">A sincronizar dados do Excel no GitHub...</div>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-
-        <!-- Filters Section -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ano</label>
-                <select id="filter-year" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todos os Anos</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Categoria</label>
-                <select id="filter-category" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todas as Categorias</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Subcategoria (Conta/Banco)</label>
-                <select id="filter-subcategory" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todas as Subcategorias</option>
-                </select>
-            </div>
-            <div class="flex items-end h-full pt-1">
-                <button id="reset-filters" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> Limpar Filtros
-                </button>
-            </div>
-        </section>
-
-        <!-- KPI Summary Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo Total</p>
-                    <h3 id="kpi-balance" class="text-2xl font-bold text-slate-900 mt-1">0,00 €</h3>
-                    <span id="kpi-balance-sub" class="text-xs text-slate-500">Receitas vs Despesas</span>
+        <div id="dashboard" class="dashboard-content">
+            <!-- Filtros -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="filtroLocal">Localização / Propriedade</label>
+                    <select id="filtroLocal" onchange="atualizarDashboard()">
+                        <option value="TODOS">Todas as Localizações</option>
+                    </select>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Rendimentos</p>
-                    <h3 id="kpi-income" class="text-2xl font-bold text-emerald-600 mt-1">0,00 €</h3>
-                    <span id="kpi-income-sub" class="text-xs text-slate-500">Incl. Investimentos</span>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner">
-                    <i class="fa-solid fa-arrow-trend-up"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Despesas</p>
-                    <h3 id="kpi-expense" class="text-2xl font-bold text-rose-600 mt-1">0,00 €</h3>
-                    <span id="kpi-expense-sub" class="text-xs text-slate-500">Saídas registadas</span>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-inner">
-                    <i class="fa-solid fa-arrow-trend-down"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rend. Investimentos</p>
-                    <h3 id="kpi-investments" class="text-2xl font-bold text-indigo-600 mt-1">0,00 €</h3>
-                    <span id="kpi-investments-sub" class="text-xs text-slate-500">ETF, PPR, etc.</span>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shadow-inner">
-                    <i class="fa-solid fa-chart-line"></i>
-                </div>
-            </div>
-        </section>
-
-        <!-- Charts Grid 1: Bar & Line -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Monthly Cashflow Bar Chart -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Evolução Mensal (Receitas vs Despesas)</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Mensal</span>
-                </div>
-                <div class="relative h-72 w-full">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Cumulative Balance Line Chart -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Evolução do Saldo Acumulado</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Tendência</span>
-                </div>
-                <div class="relative h-72 w-full">
-                    <canvas id="balanceChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Charts Grid 2: Pie / Doughnut Charts -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Expenses by Category Doughnut -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Distribuição de Despesas por Categoria</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Despesas</span>
-                </div>
-                <div class="relative h-72 w-full flex items-center justify-center">
-                    <canvas id="expensePieChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Investment Breakdown / Income Sources -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 text-base">Rendimentos de Investimento (ETF, PPR, etc.)</h3>
-                    <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">Investimentos</span>
-                </div>
-                <div class="relative h-72 w-full flex items-center justify-center">
-                    <canvas id="investmentPieChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Future Balance Projection Simulator Section -->
-        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Simulador de Projeção de Saldo Futuro
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Simule o crescimento do património ajustando taxas de aumento anual para cada componente financeiro.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <label class="text-xs font-semibold text-slate-600">Horizonte Temporal:</label>
-                    <select id="proj-years" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500">
-                        <option value="1">1 Ano</option>
-                        <option value="3" selected>3 Anos</option>
-                        <option value="5">5 Anos</option>
-                        <option value="10">10 Years</option>
+                <div class="filter-group">
+                    <label for="filtroAno">Ano / Período</label>
+                    <select id="filtroAno" onchange="atualizarDashboard()">
+                        <option value="TODOS">Todos</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Inputs Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Rendimentos Gerais</span>
-                        <span id="val-inc-general" class="text-brand-600 font-mono">3.0%</span>
-                    </label>
-                    <input type="range" id="input-inc-general" min="-20" max="50" step="0.5" value="3" class="w-full accent-brand-600 cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">Aplica-se a todas as categorias positivas exceto "Rend. Investimentos".</p>
+            <!-- Cartões de Resumo -->
+            <div class="grid-cards">
+                <div class="card">
+                    <h3>Média Geral (pl/h)</h3>
+                    <div class="value" id="kpi-plh">0.00</div>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Despesas</span>
-                        <span id="val-inc-expense" class="text-rose-600 font-mono">2.0%</span>
-                    </label>
-                    <input type="range" id="input-inc-expense" min="-20" max="50" step="0.5" value="2" class="w-full accent-rose-600 cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">Aplica-se a todas as despesas (valores negativos).</p>
+                <div class="card">
+                    <h3>Média Geral (kg/h)</h3>
+                    <div class="value" id="kpi-kgh">0.00</div>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento Rend. Investimentos</span>
-                        <span id="val-inc-invest" class="text-indigo-600 font-mono">7.0%</span>
-                    </label>
-                    <input type="range" id="input-inc-invest" min="-50" max="100" step="0.5" value="7" class="w-full accent-indigo-600 cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">Aplica-se exclusivamente à categoria "Rend. Investimentos".</p>
+                <div class="card">
+                    <h3>Total (h/ha/semana)</h3>
+                    <div class="value" id="kpi-hha">0.00</div>
                 </div>
             </div>
 
-            <!-- Projection Chart and Summary -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                <div class="lg:col-span-2 relative h-72 w-full">
-                    <canvas id="projectionChart"></canvas>
+            <!-- Gráficos -->
+            <div class="grid-charts">
+                <div class="chart-card">
+                    <h2>Evolução da Produtividade (kg/h)</h2>
+                    <canvas id="chartKgH"></canvas>
                 </div>
-                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md space-y-4">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resumo da Projeção</h4>
-                    <div>
-                        <p class="text-xs text-slate-300">Saldo Atual Base</p>
-                        <p id="proj-current-balance" class="text-lg font-bold">0,00 €</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-300">Saldo Projetado Final</p>
-                        <p id="proj-final-balance" class="text-2xl font-extrabold text-brand-400">0,00 €</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-300">Crescimento Estimado</p>
-                        <p id="proj-growth" class="text-sm font-semibold text-emerald-300">+0,00 € (0%)</p>
-                    </div>
+                <div class="chart-card">
+                    <h2>Rendimento de Mão de Obra (pl/h)</h2>
+                    <canvas id="chartPlH"></canvas>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- Transactions Table Section -->
-        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h3 class="font-bold text-slate-900 text-base">Transações Detalhadas</h3>
-                    <p class="text-xs text-slate-500">Lista completa com base nos filtros aplicados</p>
-                </div>
-                <div class="relative w-full sm:w-72">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-search"></i>
-                    </span>
-                    <input type="text" id="table-search" placeholder="Pesquisar descrição..." class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase tracking-wider border-b border-slate-200">
-                            <th class="py-3 px-4">Data</th>
-                            <th class="py-3 px-4">Descrição / Who</th>
-                            <th class="py-3 px-4">Categoria</th>
-                            <th class="py-3 px-4">Subcategoria</th>
-                            <th class="py-3 px-4 text-right">Montante</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-tbody" class="divide-y divide-slate-100 text-slate-700">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-                <span id="table-count">A mostrar 0 transações</span>
-                <div class="flex gap-2">
-                    <button id="prev-page" class="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-50">Anterior</button>
-                    <span id="page-indicator" class="py-1 px-2">Página 1 de 1</span>
-                    <button id="next-page" class="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-50">Seguinte</button>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
-        <p>Dashboard Financeiro Inteligente • Desenvolvido com Tailwind CSS & Chart.js</p>
-    </footer>
-
-    <!-- JavaScript Application Logic -->
     <script>
-        // --- EMBEDDED SAMPLE RAW DATA (Matching User Image Format) ---
-        // Columns: Date, Description / who, Category, Amount (signed), Subcategory
-        const defaultRawData = [
-            { date: "31/08/2026", description: "Carreira 28", category: "Restauração", amount: -3.25, subcategory: "Black Plus Luís" },
-            { date: "31/08/2026", description: "Cartão Dá Compras", category: "Compras", amount: -96.73, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Compras Saldo Continente", category: "Compras", amount: -202.60, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "ETF", category: "Rend. Investimentos", amount: 3500.56, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Galp", category: "Gasóleo/Gasolina", amount: -44.66, subcategory: "Black Plus Cel..." },
-            { date: "31/08/2026", description: "Galp Saldo Continente", category: "Gasóleo/Gasolina", amount: -50.00, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Outros Saldo Continente", category: "Outros", amount: -8.89, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "PPR", category: "Rend. Investimentos", amount: 1584.22, subcategory: "Millennium" },
-            { date: "31/08/2026", description: "Spotify", category: "Outros", amount: -2.83, subcategory: "Bybit 5%" },
-            { date: "15/07/2026", description: "Salário Empresa", category: "Salário", amount: 2450.00, subcategory: "Millennium" },
-            { date: "10/07/2026", description: "Supermercado Pingo Doce", category: "Compras", amount: -125.40, subcategory: "Millennium" },
-            { date: "05/06/2026", description: "Dividendos Ações", category: "Rend. Investimentos", amount: 430.12, subcategory: "DeGiro" },
-            { date: "20/05/2026", description: "Restaurante Família", category: "Restauração", amount: -85.50, subcategory: "Millennium" },
-            { date: "15/05/2026", description: "Salário Empresa", category: "Salário", amount: 2450.00, subcategory: "Millennium" },
-            { date: "10/04/2025", description: "Eletricidade EDP", category: "Casa", amount: -74.20, subcategory: "Millennium" },
-            { date: "15/04/2025", description: "Salário Empresa", category: "Salário", amount: 2350.00, subcategory: "Millennium" },
-            { date: "28/04/2025", description: "ETF Vanguard", category: "Rend. Investimentos", amount: 1200.00, subcategory: "DeGiro" }
-        ];
+        // COLE AQUI O SEU LINK RAW DO GITHUB DO FICHEIRO EXCEL (.xlsx)
+        const excelUrl = 'INSIRA_AQUI_O_LINK_RAW_DO_GITHUB';
 
-        let globalTransactions = [...defaultRawData];
-        let filteredTransactions = [...defaultRawData];
+        let dadosGlobais = [];
+        let chartKgHInstance = null;
+        let chartPlHInstance = null;
 
-        // Chart instances
-        let monthlyChart = null;
-        let balanceChart = null;
-        let expensePieChart = null;
-        let investmentPieChart = null;
-        let projectionChart = null;
+        // 1. Carregar o Excel do GitHub ao iniciar a página
+        async function carregarExcelDoGitHub() {
+            try {
+                const response = await fetch(excelUrl);
+                if (!response.ok) throw new Error('Falha ao descarregar o ficheiro Excel.');
+                
+                const buffer = await response.arrayBuffer();
+                const workbook = XLSX.read(buffer, { type: 'array' });
+                
+                // Lê a primeira folha do Excel
+                const nomeFolha = workbook.SheetNames[0];
+                const folha = workbook.Sheets[nomeFolha];
+                
+                // Converte para JSON
+                dadosGlobais = XLSX.utils.sheet_to_json(folha);
 
-        // Pagination state
-        let currentPage = 1;
-        const pageSize = 10;
-        let searchTerm = '';
-
-        // --- INIT & DATA LOADING ---
-        window.addEventListener('DOMContentLoaded', async () => {
-            // Try loading external Excel from GitHub repo if configured or standard filename "dados.xlsx" / "raw_data.xlsx"
-            await tryLoadExternalExcel();
-
-            initFilters();
-            setupEventListeners();
-            processAndRender();
-        });
-
-        async function tryLoadExternalExcel() {
-            const possibleUrls = [
-                'dados.xlsx',
-                'raw_data.xlsx',
-                'finance.xlsx',
-                'https://raw.githubusercontent.com/luis/dashboard/main/dados.xlsx',
-                'https://raw.githubusercontent.com/luis/dashboard/main/raw_data.xlsx'
-            ];
-
-            for (const url of possibleUrls) {
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const arrayBuffer = await response.arrayBuffer();
-                        const data = new Uint8Array(arrayBuffer);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        
-                        if (jsonData && jsonData.length > 0) {
-                            parseExternalData(jsonData);
-                            document.getElementById('datasource-status').className = 'inline-block w-2.5 h-2.5 rounded-full bg-emerald-400';
-                            document.getElementById('datasource-text').textContent = `Excel Externo Carregado (${url})`;
-                            return;
-                        }
-                    }
-                } catch (e) {
-                    // Ignore and try next
+                if (dadosGlobais.length === 0) {
+                    alert('O ficheiro Excel está vazio ou não foi lido corretamente.');
+                    return;
                 }
+
+                // Esconde o aviso de loading e mostra o dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+                inicializarFiltros();
+                atualizarDashboard();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerText = 'Erro ao carregar o Excel. Verifique a consola e o link Raw do GitHub.';
             }
         }
 
-        function parseExternalData(rawJson) {
-            // Map external JSON columns flexibly to our standard format: date, description, category, amount, subcategory
-            const parsed = rawJson.map(row => {
-                // Find keys case-insensitively or matching known patterns
-                const keys = Object.keys(row);
-                let dateKey = keys.find(k => /data|date/i.test(k)) || keys[0];
-                let descKey = keys.find(k => /desc|who|nome|descricao/i.test(k)) || keys[1];
-                let catKey = keys.find(k => /cat/i.test(k)) || keys[2];
-                let amtKey = keys.find(k => /amount|montante|valor/i.test(k)) || keys[3];
-                let subKey = keys.find(k => /sub/i.test(k)) || keys[4];
+        // 2. Preencher as opções dos filtros dinamicamente com base nas colunas do Excel
+        function inicializarFiltros() {
+            const locaisSet = new Set();
+            const anosSet = new Set();
 
-                let rawAmt = row[amtKey];
-                let amountNum = 0;
-                if (typeof rawAmt === 'number') {
-                    amountNum = rawAmt;
-                } else if (typeof rawAmt === 'string') {
-                    // clean string amount like "- 3,25 €" or "3.500,56 €"
-                    let cleaned = rawAmt.replace(/[^\d,\.-]/g, '').replace(/\./g, '').replace(',', '.');
-                    // Check if there's a minus sign preceding
-                    if (rawAmt.includes('-')) {
-                        amountNum = -Math.abs(parseFloat(cleaned) || 0);
-                    } else {
-                        amountNum = parseFloat(cleaned) || 0;
-                    }
-                }
-
-                // Format date string
-                let rawDate = row[dateKey];
-                let dateStr = "01/01/2026";
-                if (typeof rawDate === 'number') {
-                    // Excel serial date
-                    const d = XLSX.SSF.parse_date_code(rawDate);
-                    dateStr = `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y}`;
-                } else if (typeof rawDate === 'string') {
-                    dateStr = rawDate;
-                }
-
-                return {
-                    date: dateStr,
-                    description: String(row[descKey] || 'Sem descrição'),
-                    category: String(row[catKey] || 'Outros'),
-                    amount: amountNum,
-                    subcategory: String(row[subKey] || 'Geral')
-                };
-            }).filter(item => !isNaN(item.amount));
-
-            if (parsed.length > 0) {
-                globalTransactions = parsed;
-            }
-        }
-
-        // File upload handler
-        document.getElementById('excel-file-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    parseExternalData(jsonData);
-                    document.getElementById('datasource-status').className = 'inline-block w-2.5 h-2.5 rounded-full bg-emerald-400';
-                    document.getElementById('datasource-text').textContent = `Ficheiro: ${file.name}`;
-                    initFilters();
-                    processAndRender();
-                } catch(err) {
-                    alert('Erro ao ler o ficheiro Excel. Verifique o formato.');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // --- FILTERS & SETUP ---
-        function initFilters() {
-            const yearsSet = new Set();
-            const catsSet = new Set();
-            const subsSet = new Set();
-
-            globalTransactions.forEach(t => {
-                let year = t.date.split('/').pop() || t.date.substring(0, 4);
-                yearsSet.add(year);
-                catsSet.add(t.category);
-                subsSet.add(t.subcategory);
+            dadosGlobais.forEach(row => {
+                if (row.Localizacao) locaisSet.add(row.Localizacao);
+                if (row.Ano) anosSet.add(row.Ano);
             });
 
-            const yearSelect = document.getElementById('filter-year');
-            const catSelect = document.getElementById('filter-category');
-            const subSelect = document.getElementById('filter-subcategory');
-
-            // Preserve current selections if possible
-            const currYear = yearSelect.value;
-            const currCat = catSelect.value;
-            const currSub = subSelect.value;
-
-            yearSelect.innerHTML = '<option value="ALL">Todos os Anos</option>';
-            Array.from(yearsSet).sort().forEach(y => {
-                yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            const selectLocal = document.getElementById('filtroLocal');
+            locaisSet.forEach(local => {
+                const opt = document.createElement('option');
+                opt.value = local;
+                opt.textContent = local;
+                selectLocal.appendChild(opt);
             });
 
-            catSelect.innerHTML = '<option value="ALL">Todas as Categorias</option>';
-            Array.from(catsSet).sort().forEach(c => {
-                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
-
-            subSelect.innerHTML = '<option value="ALL">Todas as Subcategorias</option>';
-            Array.from(subsSet).sort().forEach(s => {
-                subSelect.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-
-            yearSelect.value = currYear;
-            catSelect.value = currCat;
-            subSelect.value = currSub;
-        }
-
-        function setupEventListeners() {
-            document.getElementById('filter-year').addEventListener('change', processAndRender);
-            document.getElementById('filter-category').addEventListener('change', processAndRender);
-            document.getElementById('filter-subcategory').addEventListener('change', processAndRender);
-            
-            document.getElementById('reset-filters').addEventListener('click', () => {
-                document.getElementById('filter-year').value = 'ALL';
-                document.getElementById('filter-category').value = 'ALL';
-                document.getElementById('filter-subcategory').value = 'ALL';
-                document.getElementById('table-search').value = '';
-                processAndRender();
-            });
-
-            document.getElementById('table-search').addEventListener('input', (e) => {
-                searchTerm = e.target.value.toLowerCase();
-                currentPage = 1;
-                renderTable();
-            });
-
-            // Simulator inputs
-            ['input-inc-general', 'input-inc-expense', 'input-inc-invest', 'proj-years'].forEach(id => {
-                document.getElementById(id).addEventListener('input', () => {
-                    updateSimulatorUI();
-                    renderProjectionChart();
-                });
+            const selectAno = document.getElementById('filtroAno');
+            anosSet.forEach(ano => {
+                const opt = document.createElement('option');
+                opt.value = ano;
+                opt.textContent = ano;
+                selectAno.appendChild(opt);
             });
         }
 
-        function updateSimulatorUI() {
-            document.getElementById('val-inc-general').textContent = document.getElementById('input-inc-general').value + '%';
-            document.getElementById('val-inc-expense').textContent = document.getElementById('input-inc-expense').value + '%';
-            document.getElementById('val-inc-invest').textContent = document.getElementById('input-inc-invest').value + '%';
-        }
+        // 3. Atualizar cálculos e gráficos conforme os filtros selecionados
+        function atualizarDashboard() {
+            const localSelecionado = document.getElementById('filtroLocal').value;
+            const anoSelecionado = document.getElementById('filtroAno').value;
 
-        // --- DATA PROCESSING & RENDERING ---
-        function processAndRender() {
-            const selYear = document.getElementById('filter-year').value;
-            const selCat = document.getElementById('filter-category').value;
-            const selSub = document.getElementById('filter-subcategory').value;
-
-            filteredTransactions = globalTransactions.filter(t => {
-                let year = t.date.split('/').pop() || t.date.substring(0, 4);
-                let matchYear = (selYear === 'ALL' || year === selYear);
-                let matchCat = (selCat === 'ALL' || t.category === selCat);
-                let matchSub = (selSub === 'ALL' || t.subcategory === selSub);
-                return matchYear && matchCat && matchSub;
+            // Filtrar dados
+            const dadosFiltrados = dadosGlobais.filter(row => {
+                const matchLocal = (localSelecionado === 'TODOS' || row.Localizacao === localSelecionado);
+                const matchAno = (anoSelecionado === 'TODOS' || String(row.Ano) === String(anoSelecionado));
+                return matchLocal && matchAno;
             });
 
-            // Sort transactions by date descending
-            filteredTransactions.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+            // Calcular KPIs (médias)
+            let somaPlH = 0, somaKgH = 0, somaHHa = 0;
+            const totalLinhas = dadosFiltrados.length || 1;
 
-            updateKPIs();
-            renderCharts();
-            updateSimulatorUI();
-            renderProjectionChart();
-            currentPage = 1;
-            renderTable();
-        }
-
-        function parseDate(dateStr) {
-            if (!dateStr) return new Date(0);
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-                return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            }
-            return new Date(dateStr);
-        }
-
-        function formatCurrency(val) {
-            return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(val);
-        }
-
-        function updateKPIs() {
-            let totalBalance = 0;
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalInvestments = 0;
-
-            filteredTransactions.forEach(t => {
-                totalBalance += t.amount;
-                if (t.category === 'Rend. Investimentos') {
-                    totalInvestments += t.amount;
-                    totalIncome += t.amount; // Also part of overall income
-                } else if (t.amount > 0) {
-                    totalIncome += t.amount;
-                } else {
-                    totalExpense += Math.abs(t.amount);
-                }
+            dadosFiltrados.forEach(row => {
+                somaPlH += Number(row.PlH || row['pl/h'] || 0);
+                somaKgH += Number(row.KgH || row['kg/h'] || 0);
+                somaHHa += Number(row.HHa || row['h/ha/semana'] || 0);
             });
 
-            document.getElementById('kpi-balance').textContent = formatCurrency(totalBalance);
-            document.getElementById('kpi-income').textContent = formatCurrency(totalIncome);
-            document.getElementById('kpi-expense').textContent = formatCurrency(totalExpense);
-            document.getElementById('kpi-investments').textContent = formatCurrency(totalInvestments);
+            document.getElementById('kpi-plh').textContent = (somaPlH / totalLinhas).toFixed(2);
+            document.getElementById('kpi-kgh').textContent = (somaKgH / totalLinhas).toFixed(2);
+            document.getElementById('kpi-hha').textContent = (somaHHa / totalLinhas).toFixed(2);
 
-            // Styling balance color
-            const balEl = document.getElementById('kpi-balance');
-            balEl.className = totalBalance >= 0 ? 'text-2xl font-bold text-slate-900 mt-1' : 'text-2xl font-bold text-rose-600 mt-1';
+            // Preparar dados para os gráficos
+            const labels = dadosFiltrados.map(row => row.Data || row.Semana || 'Registo');
+            const valoresKgH = dadosFiltrados.map(row => Number(row.KgH || row['kg/h'] || 0));
+            const valoresPlH = dadosFiltrados.map(row => Number(row.PlH || row['pl/h'] || 0));
+
+            desenharGraficos(labels, valoresKgH, valoresPlH);
         }
 
-        // --- CHARTS GENERATION ---
-        function renderCharts() {
-            renderMonthlyChart();
-            renderBalanceChart();
-            renderExpensePieChart();
-            renderInvestmentPieChart();
-        }
-
-        function renderMonthlyChart() {
-            const ctx = document.getElementById('monthlyChart').getContext('2d');
-            
-            // Group by Month/Year
-            const monthlyData = {};
-            filteredTransactions.forEach(t => {
-                const parts = t.date.split('/');
-                if (parts.length === 3) {
-                    const key = `${parts[1]}/${parts[2]}`; // MM/YYYY
-                    if (!monthlyData[key]) monthlyData[key] = { income: 0, expense: 0 };
-                    if (t.amount > 0) {
-                        monthlyData[key].income += t.amount;
-                    } else {
-                        monthlyData[key].expense += Math.abs(t.amount);
-                    }
-                }
+        // 4. Renderizar/Atualizar Gráficos Chart.js
+        function desenharGraficos(labels, valoresKgH, valoresPlH) {
+            // Gráfico Kg/H
+            const ctxKg = document.getElementById('chartKgH').getContext('2d');
+            if (chartKgHInstance) chartKgHInstance.destroy();
+            chartKgHInstance = new Chart(ctxKg, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'kg/h',
+                        data: valoresKgH,
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
             });
 
-            const sortedKeys = Object.keys(monthlyData).sort((a,b) => {
-                const [ma, ya] = a.split('/');
-                const [mb, yb] = b.split('/');
-                return new Date(`${ya}-${ma}-01`) - new Date(`${yb}-${mb}-01`);
-            });
-
-            const labels = sortedKeys;
-            const incomeData = sortedKeys.map(k => monthlyData[k].income);
-            const expenseData = sortedKeys.map(k => monthlyData[k].expense);
-
-            if (monthlyChart) monthlyChart.destroy();
-
-            monthlyChart = new Chart(ctx, {
+            // Gráfico Pl/H
+            const ctxPl = document.getElementById('chartPlH').getContext('2d');
+            if (chartPlHInstance) chartPlHInstance.destroy();
+            chartPlHInstance = new Chart(ctxPl, {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [
-                        {
-                            label: 'Receitas',
-                            data: incomeData,
-                            backgroundColor: '#22c55e',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'Despesas',
-                            data: expenseData,
-                            backgroundColor: '#f43f5e',
-                            borderRadius: 6
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        function renderBalanceChart() {
-            const ctx = document.getElementById('balanceChart').getContext('2d');
-
-            // Sort chronological for cumulative balance
-            const sorted = [...filteredTransactions].sort((a,b) => parseDate(a.date) - parseDate(b.date));
-            const timeline = {};
-            let running = 0;
-
-            sorted.forEach(t => {
-                running += t.amount;
-                timeline[t.date] = running;
-            });
-
-            const labels = Object.keys(timeline);
-            const data = Object.values(timeline);
-
-            if (balanceChart) balanceChart.destroy();
-
-            balanceChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
                     datasets: [{
-                        label: 'Saldo Acumulado',
-                        data: data,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#3b82f6'
+                        label: 'pl/h',
+                        data: valoresPlH,
+                        backgroundColor: '#2c3e50',
+                        borderWidth: 1
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: {
-                        y: { grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
+                options: { responsive: true, plugins: { legend: { display: false } } }
             });
         }
 
-        function renderExpensePieChart() {
-            const ctx = document.getElementById('expensePieChart').getContext('2d');
-            const expensesByCategory = {};
-
-            filteredTransactions.forEach(t => {
-                if (t.amount < 0 && t.category !== 'Rend. Investimentos') {
-                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + Math.abs(t.amount);
-                }
-            });
-
-            const labels = Object.keys(expensesByCategory);
-            const data = Object.values(expensesByCategory);
-
-            if (expensePieChart) expensePieChart.destroy();
-
-            expensePieChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: [
-                            '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#64748b'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } }
-                }
-            });
-        }
-
-        function renderInvestmentPieChart() {
-            const ctx = document.getElementById('investmentPieChart').getContext('2d');
-            const investMap = {};
-
-            filteredTransactions.forEach(t => {
-                if (t.category === 'Rend. Investimentos') {
-                    investMap[t.description] = (investMap[t.description] || 0) + t.amount;
-                }
-            });
-
-            const labels = Object.keys(investMap);
-            const data = Object.values(investMap);
-
-            if (investmentPieChart) investmentPieChart.destroy();
-
-            investmentPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels.length > 0 ? labels : ['Sem Investimentos'],
-                    datasets: [{
-                        data: data.length > 0 ? data : [1],
-                        backgroundColor: ['#6366f1', '#a855f7', '#3b82f6', '#06b6d4', '#10b981'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } }
-                }
-            });
-        }
-
-        // --- SIMULATOR & PROJECTION CHART ---
-        function renderProjectionChart() {
-            const ctx = document.getElementById('projectionChart').getContext('2d');
-            
-            // Calculate base annual metrics from filtered transactions
-            let baseGeneralIncome = 0;
-            let baseExpense = 0;
-            let baseInvestIncome = 0;
-            let currentBalance = 0;
-
-            filteredTransactions.forEach(t => {
-                currentBalance += t.amount;
-                if (t.category === 'Rend. Investimentos') {
-                    baseInvestIncome += t.amount;
-                } else if (t.amount > 0) {
-                    baseGeneralIncome += t.amount;
-                } else {
-                    baseExpense += Math.abs(t.amount);
-                }
-            });
-
-            const incGeneralRate = parseFloat(document.getElementById('input-inc-general').value) / 100;
-            const incExpenseRate = parseFloat(document.getElementById('input-inc-expense').value) / 100;
-            const incInvestRate = parseFloat(document.getElementById('input-inc-invest').value) / 100;
-            const numYears = parseInt(document.getElementById('proj-years').value);
-
-            let labels = ['Ano Atual'];
-            let projectionValues = [currentBalance];
-
-            let runningBalance = currentBalance;
-            let curGenInc = baseGeneralIncome;
-            let curExp = baseExpense;
-            let curInv = baseInvestIncome;
-
-            for (let y = 1; y <= numYears; y++) {
-                if (y > 1) {
-                    curGenInc *= (1 + incGeneralRate);
-                    curExp *= (1 + incExpenseRate);
-                    curInv *= (1 + incInvestRate);
-                }
-                let netAnnual = curGenInc + curInv - curExp;
-                runningBalance += netAnnual;
-                labels.push(`Ano +${y}`);
-                projectionValues.push(runningBalance);
-            }
-
-            document.getElementById('proj-current-balance').textContent = formatCurrency(currentBalance);
-            document.getElementById('proj-final-balance').textContent = formatCurrency(runningBalance);
-            const diff = runningBalance - currentBalance;
-            const pct = currentBalance !== 0 ? (diff / Math.abs(currentBalance)) * 100 : 0;
-            document.getElementById('proj-growth').textContent = `${diff >= 0 ? '+' : ''}${formatCurrency(diff)} (${pct.toFixed(1)}%)`;
-
-            if (projectionChart) projectionChart.destroy();
-
-            projectionChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Projeção de Saldo Futuro',
-                        data: projectionValues,
-                        borderColor: '#16a34a',
-                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#16a34a'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: {
-                        y: { grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // --- TABLE RENDERING & SEARCH ---
-        function renderTable() {
-            const tbody = document.getElementById('transactions-tbody');
-            tbody.innerHTML = '';
-
-            let dataToDisplay = filteredTransactions;
-            if (searchTerm) {
-                dataToDisplay = filteredTransactions.filter(t => 
-                    t.description.toLowerCase().includes(searchTerm) ||
-                    t.category.toLowerCase().includes(searchTerm) ||
-                    t.subcategory.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            const totalRows = dataToDisplay.length;
-            const totalPages = Math.ceil(totalRows / pageSize) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            const start = (currentPage - 1) * pageSize;
-            const paginated = dataToDisplay.slice(start, start + pageSize);
-
-            if (paginated.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Nenhuma transação encontrada.</td></tr>`;
-            } else {
-                paginated.forEach(t => {
-                    const isPositive = t.amount >= 0;
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 transition';
-                    tr.innerHTML = `
-                        <td class="py-3 px-4 font-mono text-xs text-slate-500">${t.date}</td>
-                        <td class="py-3 px-4 font-medium text-slate-800">${t.description}</td>
-                        <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs">${t.category}</span></td>
-                        <td class="py-3 px-4 text-slate-500 text-xs">${t.subcategory}</td>
-                        <td class="py-3 px-4 text-right font-mono font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}">
-                            ${isPositive ? '+' : ''}${formatCurrency(t.amount)}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            document.getElementById('table-count').textContent = `A mostrar ${paginated.length} de ${totalRows} transações`;
-            document.getElementById('page-indicator').textContent = `Página ${currentPage} de ${totalPages}`;
-            document.getElementById('prev-page').disabled = currentPage <= 1;
-            document.getElementById('next-page').disabled = currentPage >= totalPages;
-        }
-
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (currentPage > 1) { currentPage--; renderTable(); }
-        });
-        document.getElementById('next-page').addEventListener('click', () => {
-            let dataToDisplay = filteredTransactions;
-            if (searchTerm) {
-                dataToDisplay = filteredTransactions.filter(t => 
-                    t.description.toLowerCase().includes(searchTerm) ||
-                    t.category.toLowerCase().includes(searchTerm) ||
-                    t.subcategory.toLowerCase().includes(searchTerm)
-                );
-            }
-            const totalPages = Math.ceil(dataToDisplay.length / pageSize) || 1;
-            if (currentPage < totalPages) { currentPage++; renderTable(); }
-        });
+        // Executar carregamento ao abrir
+        carregarExcelDoGitHub();
     </script>
 </body>
 </html>
