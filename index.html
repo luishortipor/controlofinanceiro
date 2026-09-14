@@ -229,11 +229,9 @@
             <div id="sankey_loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
                 <i class="fa-solid fa-spinner fa-spin text-xl text-brand-600"></i> A calcular diagrama de fluxos...
             </div>
-            <!-- Contentor responsivo com escala automática para telemóveis na vertical -->
-            <div class="w-full overflow-x-auto">
-                <div class="w-full min-w-[320px] sm:min-w-[500px] h-[300px] md:h-[400px]">
-                    <div id="sankey_chart" class="w-full h-full"></div>
-                </div>
+            <!-- Contentor responsivo: ocupa sempre a largura disponível, sem barras de scroll -->
+            <div id="sankey_container" class="w-full h-[260px] sm:h-[300px] md:h-[400px] overflow-hidden">
+                <div id="sankey_chart" class="w-full h-full"></div>
             </div>
         </section>
 
@@ -388,6 +386,17 @@
                 renderSankeyChart();
             }, 200);
         });
+
+        // ResizeObserver: garante que o Sankey acompanha o contentor mesmo quando o tamanho
+        // muda por outras razões (ex: layout, sidebars, zoom), não só o resize da janela.
+        const sankeyContainerEl = document.getElementById('sankey_container');
+        if (sankeyContainerEl && window.ResizeObserver) {
+            let roTimer;
+            new ResizeObserver(() => {
+                clearTimeout(roTimer);
+                roTimer = setTimeout(() => renderSankeyChart(), 150);
+            }).observe(sankeyContainerEl);
+        }
 
         // Plugin customizado do Chart.js para desenhar o TOTAL arredondado no centro exato do Doughnut chart
         const centerTotalPlugin = {
@@ -1327,15 +1336,22 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
             }
             data.addRows(dataTableData);
 
+            // O Google Charts precisa de dimensões numéricas (em píxeis) - '100%' não é
+            // interpretado corretamente e faz o gráfico exceder o contentor, causando scroll.
+            const chartContainer = document.getElementById('sankey_chart');
+            const containerWidth = chartContainer.clientWidth || chartContainer.parentElement.clientWidth;
+            const containerHeight = chartContainer.clientHeight || chartContainer.parentElement.clientHeight;
+            const isSmallScreen = containerWidth < 480;
+
             const options = {
-                width: '100%',
-                height: '100%',
+                width: containerWidth,
+                height: containerHeight,
                 sankey: {
                     node: {
                         colors: ['#3b82f6', '#22c55e', '#eab308', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#94a3b8'],
-                        label: { fontName: 'sans-serif', fontSize: 12, color: '#1e293b', bold: true },
-                        nodePadding: 12,
-                        width: 16
+                        label: { fontName: 'sans-serif', fontSize: isSmallScreen ? 9 : 12, color: '#1e293b', bold: true },
+                        nodePadding: isSmallScreen ? 6 : 12,
+                        width: isSmallScreen ? 10 : 16
                     },
                     link: {
                         colorMode: 'source'
@@ -1343,7 +1359,7 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
                 }
             };
 
-            const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));
+            const chart = new google.visualization.Sankey(chartContainer);
             chart.draw(data, options);
         }
 
@@ -1420,6 +1436,7 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
     let curExp = baseExpense;
 
     let fireYearFound = null;
+    let incomeReducedApplied = false; // Garante que a redução de 60% só é aplicada uma vez
 
     for (let yr = startYear; yr <= endYear; yr++) {
         // Regra FIRE: O rendimento passivo do ano (saldo * taxa de investimento) é maior que as despesas do ano
@@ -1439,6 +1456,15 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
             curGenInc *= (1 + incGeneralRate);
             curExp *= (1 + incExpenseRate);
         }
+
+        // Simulação de reforma: a partir do ano seguinte a atingir o FIRE, as receitas
+        // gerais caem para 60% (deixa de haver salário, fica apenas rendimento de reforma).
+        // Aplicado uma única vez, no ano em que o FIRE é atingido, para que o ano seguinte
+        // já reflita o corte; a partir daí a receita reduzida continua a crescer normalmente.
+        if (fireYearFound && yr === fireYearFound && !incomeReducedApplied) {
+            curGenInc *= 0.6;
+            incomeReducedApplied = true;
+        }
         
         // Aplicação da fórmula exata do saldo:
         // Saldo do próximo ano = (Saldo Anterior + Receitas Gerais - Despesas) * (1 + Taxa de Investimento)
@@ -1448,16 +1474,17 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
 
     document.getElementById('proj-current-balance').textContent = formatCurrencyRounded(currentBalanceGlobal);
 
-    // Resumo do saldo previsto de 5 em 5 anos (até 2050)
+    // Resumo do saldo previsto de 5 em 5 anos (até 2050), incluindo o ano em que o FIRE é atingido
     const fiveYearSummaryEl = document.getElementById('proj-five-year-summary');
     let fiveYearRows = '';
     labels.forEach((yr, idx) => {
         const yrNum = parseInt(yr);
-        if (yrNum % 5 === 0) {
+        const isFireYear = fireYearFound && yrNum === fireYearFound;
+        if (yrNum % 5 === 0 || isFireYear) {
             const bal = projectionValues[idx];
             fiveYearRows += `
-                <div class="flex justify-between items-center text-sm border-t border-slate-700 pt-1.5">
-                    <span class="text-slate-300">${yrNum}</span>
+                <div class="flex justify-between items-center text-sm border-t ${isFireYear ? 'border-amber-500/50 bg-amber-500/10 -mx-1 px-1 rounded' : 'border-slate-700'} pt-1.5">
+                    <span class="${isFireYear ? 'text-amber-400 font-semibold' : 'text-slate-300'}">${isFireYear ? '<i class="fa-solid fa-fire mr-1"></i>' : ''}${yrNum}${isFireYear ? ' (FIRE)' : ''}</span>
                     <span class="font-mono font-bold ${bal >= 0 ? 'text-brand-400' : 'text-rose-400'}">${formatCurrencyRounded(bal)}</span>
                 </div>`;
         }
