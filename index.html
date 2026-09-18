@@ -407,7 +407,9 @@
                 const dataset = chart.data.datasets[0];
                 if (!dataset) return;
                 
-                const total = dataset.data.reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
+                const total = (dataset.realTotal !== undefined)
+                    ? dataset.realTotal
+                    : dataset.data.reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
                 const formattedTotal = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(total));
 
                 ctx.save();
@@ -1122,6 +1124,7 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
                     labels: labels,
                     datasets: [{
                         data: dataValues.length > 0 ? dataValues : [1],
+                        realTotal: totalInc,
                         backgroundColor: generateDistinctColors(labels.length),
                         borderWidth: 2,
                         borderColor: '#ffffff',
@@ -1211,6 +1214,7 @@ function getFilteredTransactionsByPeriod(transactions, periodValue) {
                     labels: labels,
                     datasets: [{
                         data: dataValues.length > 0 ? dataValues : [1],
+                        realTotal: totalExp,
                         backgroundColor: generateDistinctColors(labels.length),
                         borderWidth: 2,
                         borderColor: '#ffffff',
