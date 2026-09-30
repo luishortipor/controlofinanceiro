@@ -34,6 +34,23 @@
             }
         }
     </script>
+    <style>
+        /* Tooltip do Sankey com o mesmo aspeto dos tooltips do Chart.js */
+        .google-visualization-tooltip {
+            background: rgba(0, 0, 0, 0.8) !important;
+            border: none !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            pointer-events: none;
+        }
+        .google-visualization-tooltip, .google-visualization-tooltip * {
+            color: #fff !important;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+            font-size: 12px !important;
+        }
+        .google-visualization-tooltip .sankey-tip { padding: 6px 10px; white-space: nowrap; }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
 
@@ -897,14 +914,20 @@
             });
 
             // Restantes KPIs respeitam os filtros ativos
+            // Soma líquida por categoria: cada categoria entra apenas nas receitas
+            // (se o total for positivo) ou nas despesas (se for negativo), nunca nas duas.
+            const categoryNet = {};
             filteredTransactions.forEach(t => {
                 if (t.category === 'Rend. Investimentos') {
                     totalInvestments += t.amount;
                 }
-                if (t.amount > 0) {
-                    totalIncome += t.amount;
-                } else {
-                    totalExpense += Math.abs(t.amount);
+                categoryNet[t.category] = (categoryNet[t.category] || 0) + t.amount;
+            });
+            Object.values(categoryNet).forEach(sum => {
+                if (sum > 0.001) {
+                    totalIncome += sum;
+                } else if (sum < -0.001) {
+                    totalExpense += Math.abs(sum);
                 }
             });
 
@@ -1182,6 +1205,10 @@
                         datalabels: { display: false },
                         tooltip: {
                             callbacks: {
+                                title: function() {
+                                    const sel = document.getElementById('filter-date');
+                                    return sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.trim() : '';
+                                },
                                 label: function(context) {
                                     const value = context.raw;
                                     return ` ${context.label}: ${formatCurrencyRounded(value)}`;
@@ -1272,6 +1299,10 @@
                         datalabels: { display: false },
                         tooltip: {
                             callbacks: {
+                                title: function() {
+                                    const sel = document.getElementById('filter-date');
+                                    return sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.trim() : '';
+                                },
                                 label: function(context) {
                                     const value = context.raw;
                                     return ` ${context.label}: ${formatCurrencyRounded(value)}`;
@@ -1281,6 +1312,11 @@
                     } 
                 }
             });
+        }
+
+        function sankeyTooltipHtml(category, value) {
+            const safe = String(category).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<div class="sankey-tip">${safe}: ${formatCurrencyRounded(value)}</div>`;
         }
 
         function renderSankeyChart() {
@@ -1321,20 +1357,36 @@
             
 
             let dataTableData = [];
+            const sankeyRows = [];
+            const sankeyColors = ['#3b82f6', '#22c55e', '#eab308', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#94a3b8'];
 
+            // Mesma regra dos cards: soma de todos os movimentos por categoria; cada categoria
+            // entra apenas nas receitas (total > 0) ou nas despesas (total < 0). Os totais são
+            // somados sem arredondar cada categoria e só arredondados no fim, para não haver desvios.
             Object.entries(categoryTotals).forEach(([cat, totalVal]) => {
-                let monthly = Math.round(Math.abs(totalVal) / diffMonths);
-                if (monthly > 0) {
-                    if (totalVal > 0) {
-                        sumTotalIncome += monthly;
-                        let label = `${cat} ${monthly} €`;
-                        dataTableData.push([label, '  ', monthly]);
-                    } else if (totalVal < 0) {
-                        sumTotalExpense += monthly;
-                        let label = `${monthly} € ${cat}`;
-                        dataTableData.push(['  ', label, monthly]);
-                    }
+                if (Math.abs(totalVal) <= 0.001) return;
+                const monthlyRaw = Math.abs(totalVal) / diffMonths;
+                const monthly = Math.round(monthlyRaw);
+                if (totalVal > 0) {
+                    sumTotalIncome += monthlyRaw;
+                    if (monthly > 0) sankeyRows.push({ from: `${cat} ${monthly} €`, to: '  ', raw: monthlyRaw, cat, monthly, catNode: `${cat} ${monthly} €` });
+                } else {
+                    sumTotalExpense += monthlyRaw;
+                    if (monthly > 0) sankeyRows.push({ from: '  ', to: `${monthly} € ${cat}`, raw: monthlyRaw, cat, monthly, catNode: `${monthly} € ${cat}` });
                 }
+            });
+            sumTotalIncome = Math.round(sumTotalIncome);
+            sumTotalExpense = Math.round(sumTotalExpense);
+
+            // O Google Charts atribui as cores aos nós pela ordem em que aparecem nos dados
+            const nodeIndex = {};
+            sankeyRows.forEach(r => {
+                [r.from, r.to].forEach(n => {
+                    if (!(n in nodeIndex)) nodeIndex[n] = Object.keys(nodeIndex).length;
+                });
+            });
+            dataTableData = sankeyRows.map(r => {
+                return [r.from, r.to, r.raw, sankeyTooltipHtml(r.cat, r.monthly)];
             });
 
             // Atualiza os somatórios com margens maiores (px-28) para ficarem mais centrados em cima das barras do Sankey
@@ -1348,9 +1400,10 @@
             data.addColumn('string', 'From');
             data.addColumn('string', 'To');
             data.addColumn('number', 'Média Mensal (€)');
+            data.addColumn({ type: 'string', role: 'tooltip', p: { html: true } });
             
             if (dataTableData.length === 0) {
-                dataTableData.push(['Sem dados', 'Sem dados', 1]);
+                dataTableData.push(['Sem dados', 'Sem dados', 1, sankeyTooltipHtml('Sem dados', 0, '#94a3b8')]);
             }
             data.addRows(dataTableData);
 
@@ -1364,9 +1417,10 @@
             const options = {
                 width: containerWidth,
                 height: containerHeight,
+                tooltip: { isHtml: true },
                 sankey: {
                     node: {
-                        colors: ['#3b82f6', '#22c55e', '#eab308', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#94a3b8'],
+                        colors: sankeyColors,
                         label: { fontName: 'sans-serif', fontSize: isSmallScreen ? 9 : 12, color: '#1e293b', bold: true },
                         nodePadding: isSmallScreen ? 6 : 12,
                         width: isSmallScreen ? 10 : 16
