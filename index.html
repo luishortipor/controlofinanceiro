@@ -89,38 +89,37 @@
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
         <!-- Filters Section -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Período</label>
-                <select id="filter-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todo o Histórico</option>
-                    <option value="last_1m">Último Mês</option>
-                    <option value="last_3m">Últimos 3 Meses</option>
-                    <option value="last_6m">Últimos 6 Meses</option>
-                    <option value="last_12m">Últimos 12 Meses</option>
-                    <option value="last_2y" selected>Últimos 2 Anos</option>
-                    <option value="last_5y">Últimos 5 Anos</option>
-                </select>
-                <p id="period-info" class="text-[11px] text-slate-400 mt-1 h-3"></p>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Categoria</label>
-                <select id="filter-category" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todas as Categorias</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Cartão</label>
-                <select id="filter-subcategory" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="ALL">Todas os Cartões</option>
-                </select>
-            </div>
-            <div class="flex items-end h-full pt-1">
-                <button id="reset-filters" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> Limpar Filtros
-                </button>
-            </div>
-        </section>
+<section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+    <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Período</label>
+        <select id="filter-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="ALL">Todo o Histórico</option>
+            <option value="last_1m">Último Mês</option>
+            <option value="last_3m">Últimos 3 Meses</option>
+            <option value="last_6m">Últimos 6 Meses</option>
+            <option value="last_12m">Últimos 12 Meses</option>
+            <option value="last_2y" selected>Últimos 2 Anos</option>
+            <option value="last_5y">Últimos 5 Anos</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Categoria</label>
+        <select id="filter-category" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="ALL">Todas as Categorias</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Cartão</label>
+        <select id="filter-subcategory" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="ALL">Todas os Cartões</option>
+        </select>
+    </div>
+    <div class="flex items-end h-full">
+        <button id="reset-filters" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> Limpar Filtros
+        </button>
+    </div>
+</section>
 
         <!-- KPI Summary Cards -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -882,15 +881,9 @@
             });
         }
 
-        function updatePeriodInfo() {
-            const el = document.getElementById('period-info');
-            if (!el) return;
-            const val = document.getElementById('filter-date').value;
-            if (val === 'ALL' || val.startsWith('year_')) { el.textContent = ''; return; }
-            const { startKey, endKey } = getPeriodRange(val);
-            const fmt = k => `${String((k % 12) + 1).padStart(2, '0')}/${Math.floor(k / 12)}`;
-            el.textContent = `De ${fmt(startKey)} a ${fmt(endKey)}`;
-        }
+function updatePeriodInfo() {
+    // Função desativada para manter os filtros alinhados
+}
 
         // Formatação arredondada à unidade (€) para cartões e gráficos
         function formatCurrencyRounded(val) {
@@ -1013,119 +1006,133 @@
         }
 
         function renderBalanceChart() {
-            const ctx = document.getElementById('balanceChart').getContext('2d');
-            
-            // 1. Calcular o saldo acumulado de TODO o histórico global ordenado por data
-            const allSorted = [...globalTransactions].sort((a, b) => parseDate(a.date) - parseDate(b.date));
-            
-            let globalRunning = 0;
-            const globalTimeline = [];
-            
-            allSorted.forEach(t => {
-                globalRunning += t.amount;
-                globalTimeline.unshift({ // Guarda do mais recente para o mais antigo para facilitar a busca do ponto de partida
-                    dateObj: parseDate(t.date),
-                    dateStr: t.date,
-                    balance: globalRunning
-                });
-            });
+    const ctx = document.getElementById('balanceChart').getContext('2d');
+    
+    // 1. Calcular o saldo acumulado de TODO o histórico global ordenado por data
+    const allSorted = [...globalTransactions].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    
+    let globalRunning = 0;
+    const globalTimeline = [];
+    
+    allSorted.forEach(t => {
+        globalRunning += t.amount;
+        globalTimeline.unshift({
+            dateObj: parseDate(t.date),
+            dateStr: t.date,
+            balance: globalRunning
+        });
+    });
 
-            // 2. Obter o período e a categoria selecionados atualmente nos filtros do topo
-            const dateFilterVal = document.getElementById('filter-date').value;
-            const selCatVal = document.getElementById('filter-category').value;
-            const isCategoryFiltered = selCatVal !== 'ALL';
+    // 2. Obter os filtros selecionados
+    const dateFilterVal = document.getElementById('filter-date').value;
+    const selCatVal = document.getElementById('filter-category').value;
+    const selSubVal = document.getElementById('filter-subcategory').value;
 
-            let startDate = null;
-            let endDate = null;
+    const isFiltered = (selCatVal !== 'ALL' || selSubVal !== 'ALL');
 
-            if (dateFilterVal.startsWith('year_')) {
-                let targetYear = dateFilterVal.replace('year_', '');
-                startDate = new Date(`${targetYear}-01-01`);
-                endDate = new Date(`${targetYear}-12-31`);
-            } else if (dateFilterVal !== 'ALL') {
-                const range = getPeriodRange(dateFilterVal);
-                startDate = range.startDate;
-                endDate = range.endDate;
-            }
+    let startDate = null;
+    let endDate = null;
 
-            // 3. Encontrar o saldo inicial exato imediatamente antes da data de início do período
-            // Nota: se houver uma categoria filtrada, ignora-se o saldo global e começa-se do zero,
-            // para que o gráfico mostre a soma acumulada apenas dessa categoria, e não o saldo total.
-            let initialBalance = 0;
-            if (!isCategoryFiltered && startDate) {
-                // Procura a transação mais recente anterior à data de início
-                const priorTrans = globalTimeline.find(item => item.dateObj < startDate);
-                if (priorTrans) {
-                    initialBalance = priorTrans.balance;
-                }
-            }
+    if (dateFilterVal.startsWith('year_')) {
+        let targetYear = dateFilterVal.replace('year_', '');
+        startDate = new Date(`${targetYear}-01-01`);
+        endDate = new Date(`${targetYear}-12-31`);
+    } else if (dateFilterVal !== 'ALL') {
+        const range = getPeriodRange(dateFilterVal);
+        startDate = range.startDate;
+        endDate = range.endDate;
+    }
 
-            // 4. Filtrar as transações que pertencem estritamente ao período selecionado
-            const periodTransactions = filteredTransactions.slice().sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    // 3. Determinar o saldo inicial
+    let initialBalance = 0;
+    if (!isFiltered && startDate) {
+        const priorTrans = globalTimeline.find(item => item.dateObj < startDate);
+        if (priorTrans) {
+            initialBalance = priorTrans.balance;
+        }
+    }
 
-            const labels = [];
-            const dataPoints = [];
-            
-            let currentRunning = initialBalance;
+    // 4. Filtrar e ordenar as transações do período
+    const periodTransactions = filteredTransactions.slice().sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
-            // Adiciona um ponto inicial "virtual" no primeiro dia se houver transações, para o gráfico começar logo no valor correto
-            if (periodTransactions.length > 0) {
-                // Se quisermos que o gráfico reflita o saldo acumulado progressivo do período:
-                periodTransactions.forEach(t => {
-                    currentRunning += t.amount;
-                    labels.push(t.date);
-                    dataPoints.push(Math.round(currentRunning));
-                });
-            }
+    const labels = [];
+    const dataPoints = [];
 
-            if (balanceChart) balanceChart.destroy();
+    // Adiciona o ponto de partida inicial com uma string vazia '' no eixo X (sem repetir o 1º dia)
+    if (periodTransactions.length > 0) {
+        labels.push(''); 
+        dataPoints.push(Math.round(initialBalance));
+    }
+    
+    let currentRunning = initialBalance;
 
-            const balanceChartLabel = isCategoryFiltered ? `Soma Acumulada — ${selCatVal}` : 'Saldo Acumulado';
-            const balanceChartColor = isCategoryFiltered ? '#8b5cf6' : '#3b82f6';
+    periodTransactions.forEach(t => {
+        currentRunning += t.amount;
+        labels.push(t.date);
+        dataPoints.push(Math.round(currentRunning));
+    });
 
-            balanceChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: balanceChartLabel,
-                        data: dataPoints,
-                        borderColor: balanceChartColor,
-                        backgroundColor: isCategoryFiltered ? 'rgba(139, 92, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 3,
-                        pointBackgroundColor: balanceChartColor
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom' },
-                        datalabels: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ${balanceChartLabel}: ${formatCurrencyRounded(context.raw)}`;
-                                }
-                            }
+    if (balanceChart) balanceChart.destroy();
+
+    let chartLabel = 'Saldo Acumulado';
+    if (selCatVal !== 'ALL' && selSubVal !== 'ALL') {
+        chartLabel = `Soma Acumulada — ${selCatVal} (${selSubVal})`;
+    } else if (selCatVal !== 'ALL') {
+        chartLabel = `Soma Acumulada — ${selCatVal}`;
+    } else if (selSubVal !== 'ALL') {
+        chartLabel = `Soma Acumulada — ${selSubVal}`;
+    }
+
+    const balanceChartColor = isFiltered ? '#8b5cf6' : '#3b82f6';
+
+    balanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: chartLabel,
+                data: dataPoints,
+                borderColor: balanceChartColor,
+                backgroundColor: isFiltered ? 'rgba(139, 92, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointBackgroundColor: balanceChartColor
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { position: 'bottom' },
+                datalabels: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            // Se for o ponto inicial sem data (string vazia), mostra "Início do Período" no tooltip
+                            const label = tooltipItems[0].label;
+                            return label === '' ? 'Início do Período' : label;
+                        },
+                        label: function(context) {
+                            return ` ${chartLabel}: ${formatCurrencyRounded(context.raw)}`;
                         }
-                    },
-                    scales: { 
-                        y: { 
-                            grid: { color: '#f1f5f9' },
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrencyRounded(value);
-                                }
-                            }
-                        }, 
-                        x: { grid: { display: false } } 
                     }
                 }
-            });
+            },
+            scales: { 
+                y: { 
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatCurrencyRounded(value);
+                        }
+                    }
+                }, 
+                x: { grid: { display: false } } 
+            }
         }
+    });
+}
 
         function renderIncomePieChart() {
             const ctx = document.getElementById('incomePieChart').getContext('2d');
