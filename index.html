@@ -51,6 +51,28 @@
         }
         .google-visualization-tooltip .sankey-tip { padding: 6px 10px; white-space: nowrap; }
     </style>
+    <style>
+        /* Remove estilos padrão da calha dos sliders para controlo total via JS */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e2e8f0; /* slate-200 padrão */
+            border-radius: 0.5rem;
+        }
+
+        /* Esfera/Thumb elegante para os sliders */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid currentColor;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
 
@@ -236,10 +258,11 @@
                 </div>
             </div>
             <!-- Totais perfeitamente alinhados e centrados sobre as colunas do Sankey -->
-            <div class="max-w-4xl mx-auto grid grid-cols-2 px-4 pt-2 font-bold text-sm md:text-base text-slate-800">
-                <div id="sankey-total-income" class="text-left pl-4 md:pl-12">Receitas: 0 €</div>
-                <div id="sankey-total-expense" class="text-right pr-4 md:pr-12">Despesas: 0 €</div>
-            </div>
+<div class="max-w-4xl mx-auto grid grid-cols-3 px-4 pt-2 font-bold text-sm md:text-base text-slate-800">
+    <div id="sankey-total-income" class="text-left pl-4 md:pl-12">Receitas: 0 €</div>
+    <div id="sankey-savings" class="text-center text-emerald-600">Poupança: 0 € (0%)</div>
+    <div id="sankey-total-expense" class="text-right pr-4 md:pr-12">Despesas: 0 €</div>
+</div>
             <div id="sankey_loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
                 <i class="fa-solid fa-spinner fa-spin text-xl text-brand-600"></i> A calcular diagrama de fluxos...
             </div>
@@ -250,64 +273,93 @@
         </section>
 
         <!-- Future Balance Projection Simulator Section -->
-        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-crystal-ball text-brand-600"></i> Previsão de Saldo
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-0.5"></p>
-                </div>
-            </div>
+<section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
+        <div>
+            <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                <i class="fa-solid fa-crystal-ball text-brand-600"></i> Previsão de Saldo
+            </h3>
+        </div>
+    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento anual de receitas</span>
-                        <span id="val-inc-general" class="text-brand-600 font-mono">2.5%</span>
-                    </label>
-                    <!-- Ajustado para min 0, max 10, passo de 0.5 -->
-                    <input type="range" id="input-inc-general" min="0" max="10" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Aumento anual de despesas</span>
-                        <span id="val-inc-expense" class="text-rose-600 font-mono">2.5%</span>
-                    </label>
-                    <!-- Ajustado para min 0, max 10, passo de 0.5 -->
-                    <input type="range" id="input-inc-expense" min="0" max="10" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                        <span>Rendimento anual dos investimentos</span>
-                        <span id="val-inc-invest" class="text-indigo-600 font-mono">8.0%</span>
-                    </label>
-                    <!-- Ajustado para min -20, max 50, passo de 1 -->
-                    <input type="range" id="input-inc-invest" min="-20" max="50" step="1" value="8" class="w-full accent-indigo-600 cursor-pointer">
-                </div>
-            </div>
+    <!-- Sliders -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                <span>Aumento anual de receitas</span>
+                <span id="val-inc-general" class="text-brand-600 font-mono">2.5%</span>
+            </label>
+            <input type="range" id="input-inc-general" min="0" max="10" step="0.5" value="2.5" class="w-full accent-brand-600 cursor-pointer">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                <span>Aumento anual de despesas</span>
+                <span id="val-inc-expense" class="text-rose-600 font-mono">2.5%</span>
+            </label>
+            <input type="range" id="input-inc-expense" min="0" max="10" step="0.5" value="2.5" class="w-full accent-rose-600 cursor-pointer">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                <span>Rendimento anual dos investimentos</span>
+                <span id="val-inc-invest" class="text-indigo-600 font-mono">8.0%</span>
+            </label>
+            <input type="range" id="input-inc-invest" min="-20" max="50" step="1" value="8" class="w-full accent-indigo-600 cursor-pointer">
+        </div>
+    </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                <div class="lg:col-span-2 relative h-80 w-full">
-                    <canvas id="projectionChart"></canvas>
+    <!-- Zona do Gráfico + Filtro na Esquerda e Painel Fixo na Direita -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    
+    <!-- Coluna Esquerda: Slider + Gráfico -->
+    <div class="lg:col-span-2 space-y-3 min-w-0">
+        
+        <!-- FILTRO DE BACKTESTING (Barra Deslizante) -->
+        <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+                <label for="proj-base-period-slider" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Ponto de Situação:
+                </label>
+                <!-- Badge que mostra o ponto selecionado -->
+                <span id="proj-base-period-label" class="bg-brand-50 text-brand-700 border border-brand-200 px-2.5 py-1 rounded-md text-xs font-bold font-mono shadow-sm">
+                    Atualmente
+                </span>
+            </div>
+            
+            <div class="relative flex items-center">
+                <input type="range" id="proj-base-period-slider" min="0" max="0" value="0" step="1" 
+                       class="w-full accent-brand-600 cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none">
+            </div>
+        </div>
+
+        <!-- Contentor do Gráfico com Altura e Largura Totalmente Fixas -->
+        <div class="relative h-[420px] w-full min-h-[420px]">
+            <canvas id="projectionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Resumo Lateral com Altura Mínima Garantida -->
+    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md space-y-4 min-h-[460px] flex flex-col justify-between">
+        <div>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Resumo da Previsão</h4>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-xs text-slate-300">Saldo no Início da Projeção</p>
+                    <p id="proj-current-balance" class="text-lg font-bold mt-0.5">0 €</p>
                 </div>
-                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md space-y-4">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resumo da Previsão</h4>
-                    <div>
-                        <p class="text-xs text-slate-300">Saldo Atual/Inicial</p>
-                        <p id="proj-current-balance" class="text-lg font-bold">0 €</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-300 mb-1.5">Saldo Previsto</p>
-                        <div id="proj-five-year-summary" class="space-y-1.5"></div>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-300">FIRE (Financial Independence, Retire Early)</p>
-                        <p id="proj-fire-status" class="text-xs font-semibold text-amber-300 mt-1">A calcular...</p>
-                    </div>
+                <div>
+                    <p class="text-xs text-slate-300 mb-1.5">Saldo Previsto</p>
+                    <div id="proj-five-year-summary" class="space-y-1.5"></div>
                 </div>
             </div>
-        </section>
+        </div>
+        
+        <div class="pt-2 border-t border-slate-700/60">
+            <p class="text-xs text-slate-300">FIRE (Financial Independence, Retire Early)</p>
+            <p id="proj-fire-status" class="text-xs font-semibold text-amber-300 mt-1">A calcular...</p>
+        </div>
+    </div>
+</div>
+</section>
 
         <!-- Transactions Table Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -503,7 +555,7 @@
             }
             dataset.backgroundColor = dataset._originalColors.map((c, i) => i === index ? c : dimHslColor(c, 0.15));
             chart.setActiveElements([{ datasetIndex: 0, index: index }]);
-            chart.update();
+            chart.update('none');
         }
 
         function pieLegendOnLeave(event, legendItem, legend) {
@@ -513,15 +565,8 @@
                 dataset.backgroundColor = dataset._originalColors.slice();
             }
             chart.setActiveElements([]);
-            chart.update();
+            chart.update('none');
         }
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            await tryLoadExternalExcel();
-            initFilters();
-            setupEventListeners();
-            processAndRender();
-        });
 
         async function tryLoadExternalExcel() {
             try {
@@ -627,72 +672,104 @@
         });
 
         function initFilters() {
-            const yearsSet = new Set();
-            const catsSet = new Set();
-            const subsSet = new Set();
+    const yearsSet = new Set();
+    const catsSet = new Set();
+    const subsSet = new Set();
 
-            globalTransactions.forEach(t => {
-                let year = t.date.split('/').pop() || t.date.substring(0, 4);
-                yearsSet.add(year);
-                catsSet.add(t.category);
-                subsSet.add(t.subcategory);
-            });
+    globalTransactions.forEach(t => {
+        let year = t.date.split('/').pop() || t.date.substring(0, 4);
+        yearsSet.add(year);
+        catsSet.add(t.category);
+        subsSet.add(t.subcategory);
+    });
 
-            const dateSelect = document.getElementById('filter-date');
-            const catSelect = document.getElementById('filter-category');
-            const subSelect = document.getElementById('filter-subcategory');
+    const dateSelect = document.getElementById('filter-date');
+    const sankeySelect = document.getElementById('sankey-period');
+    const catSelect = document.getElementById('filter-category');
+    const subSelect = document.getElementById('filter-subcategory');
 
-            const currDateVal = dateSelect.value;
-            const currCat = catSelect.value;
-            const currSub = subSelect.value;
+    const currDateVal = dateSelect ? dateSelect.value : 'last_2y';
+    const currSankeyVal = sankeySelect ? sankeySelect.value : 'last_2y';
+    const currCat = catSelect ? catSelect.value : 'ALL';
+    const currSub = subSelect ? subSelect.value : 'ALL';
 
-            dateSelect.innerHTML = `
-                <option value="ALL">Todo o Histórico</option>
-                <option value="last_1m">Último Mês</option>
-                <option value="last_3m">Últimos 3 Meses</option>
-                <option value="last_6m">Últimos 6 Meses</option>
-                <option value="last_12m">Últimos 12 Meses</option>
-                <option value="last_2y">Últimos 2 Anos</option>
-                <option value="last_5y">Últimos 5 Anos</option>
-            `;
+    // Estrutura padrão de opções para o filtro do topo e do Sankey
+    const periodOptionsHtml = `
+        <option value="ALL">Todo o Histórico</option>
+        <option value="last_1m">Último Mês</option>
+        <option value="last_3m">Últimos 3 Meses</option>
+        <option value="last_6m">Últimos 6 Meses</option>
+        <option value="last_12m">Últimos 12 Meses</option>
+        <option value="last_2y">Últimos 2 Anos</option>
+        <option value="last_5y">Últimos 5 Anos</option>
+    `;
 
-            Array.from(yearsSet).sort().reverse().forEach(y => {
-                dateSelect.innerHTML += `<option value="year_${y}">Ano ${y}</option>`;
-            });
+    // 1. Popula o filtro principal de data no topo
+    if (dateSelect) {
+        dateSelect.innerHTML = periodOptionsHtml;
+    }
+    
+    // 2. Popula o filtro de período do Sankey com as mesmas opções
+    if (sankeySelect) {
+        sankeySelect.innerHTML = periodOptionsHtml;
+    }
 
-            catSelect.innerHTML = '<option value="ALL">Todas as Categorias</option>';
-            Array.from(catsSet).sort().forEach(c => {
-                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
+    // Adiciona os Anos individuais a ambos os selects
+    Array.from(yearsSet).sort().reverse().forEach(y => {
+        const yearOption = `<option value="year_${y}">Ano ${y}</option>`;
+        if (dateSelect) dateSelect.innerHTML += yearOption;
+        if (sankeySelect) sankeySelect.innerHTML += yearOption;
+    });
 
-            subSelect.innerHTML = '<option value="ALL">Todas os Cartões</option>';
-            Array.from(subsSet).sort().forEach(s => {
-                subSelect.innerHTML += `<option value="${s}">${s}</option>`;
-            });
+    // Popula o select de categorias do topo
+    if (catSelect) {
+        catSelect.innerHTML = '<option value="ALL">Todas as Categorias</option>';
+        Array.from(catsSet).sort().forEach(c => {
+            catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+    }
 
-            dateSelect.value = currDateVal;
-            catSelect.value = currCat;
-            subSelect.value = currSub;
+    // Popula o select de cartões/subcategorias do topo
+    if (subSelect) {
+        subSelect.innerHTML = '<option value="ALL">Todas os Cartões</option>';
+        Array.from(subsSet).sort().forEach(s => {
+            subSelect.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+    }
 
-            // Popula também os selects de filtro por coluna da tabela de transações
-            const colCatSelect = document.getElementById('col-filter-category');
-            const colSubSelect = document.getElementById('col-filter-subcategory');
-            const currColCat = colCatSelect.value;
-            const currColSub = colSubSelect.value;
+    // Repõe os valores selecionados
+    if (dateSelect) dateSelect.value = currDateVal;
+    if (sankeySelect) sankeySelect.value = currSankeyVal;
+    if (catSelect) catSelect.value = currCat;
+    if (subSelect) subSelect.value = currSub;
 
-            colCatSelect.innerHTML = '<option value="ALL">Todas</option>';
-            Array.from(catsSet).sort().forEach(c => {
-                colCatSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
+    // Popula os selects de filtro por coluna da tabela de transações
+    const colCatSelect = document.getElementById('col-filter-category');
+    const colSubSelect = document.getElementById('col-filter-subcategory');
+    
+    if (colCatSelect && colSubSelect) {
+        const currColCat = colCatSelect.value;
+        const currColSub = colSubSelect.value;
 
-            colSubSelect.innerHTML = '<option value="ALL">Todos</option>';
-            Array.from(subsSet).sort().forEach(s => {
-                colSubSelect.innerHTML += `<option value="${s}">${s}</option>`;
-            });
+        colCatSelect.innerHTML = '<option value="ALL">Todas</option>';
+        Array.from(catsSet).sort().forEach(c => {
+            colCatSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
 
-            colCatSelect.value = currColCat || 'ALL';
-            colSubSelect.value = currColSub || 'ALL';
-        }
+        colSubSelect.innerHTML = '<option value="ALL">Todos</option>';
+        Array.from(subsSet).sort().forEach(s => {
+            colSubSelect.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+
+        colCatSelect.value = currColCat || 'ALL';
+        colSubSelect.value = currColSub || 'ALL';
+    }
+
+    // Inicializa as opções do filtro da Previsão de Saldo
+    if (typeof initProjectionBasePeriodFilter === 'function') {
+        initProjectionBasePeriodFilter();
+    }
+}
 
         function setupEventListeners() {
             document.getElementById('filter-date').addEventListener('change', processAndRender);
@@ -759,6 +836,9 @@
                 currentPage++;
                 renderTable();
             });
+            document.getElementById('proj-base-period-slider')?.addEventListener('input', () => {
+        renderProjectionChart();
+    });
         }
 
         function resetTableColumnFilters() {
@@ -1101,36 +1181,44 @@ function updatePeriodInfo() {
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { position: 'bottom' },
-                datalabels: { display: false },
-                tooltip: {
-                    callbacks: {
-                        title: function(tooltipItems) {
-                            // Se for o ponto inicial sem data (string vazia), mostra "Início do Período" no tooltip
-                            const label = tooltipItems[0].label;
-                            return label === '' ? 'Início do Período' : label;
-                        },
-                        label: function(context) {
-                            return ` ${chartLabel}: ${formatCurrencyRounded(context.raw)}`;
-                        }
-                    }
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+    duration: 1000,
+    easing: 'easeOutQuart',
+    x: {
+        type: 'number',
+        from: 0, // Começa a desenhar do marco 0 do gráfico imediatamente
+    },
+    y: {
+        type: 'number',
+        duration: 1000,
+        easing: 'easeOutQuart'
+    }
+},
+    plugins: { 
+        legend: { position: 'bottom' },
+        datalabels: { display: false },
+        tooltip: {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const label = tooltipItems[0].label;
+                    return label === '' ? 'Início do Período' : label;
+                },
+                label: function(context) {
+                    return ` ${chartLabel}: ${formatCurrencyRounded(context.raw)}`;
                 }
-            },
-            scales: { 
-                y: { 
-                    grid: { color: '#f1f5f9' },
-                    ticks: {
-                        callback: function(value) {
-                            return formatCurrencyRounded(value);
-                        }
-                    }
-                }, 
-                x: { grid: { display: false } } 
             }
         }
+    },
+    scales: { 
+        y: { 
+            grid: { color: '#f1f5f9' },
+            ticks: { callback: value => formatCurrencyRounded(value) }
+        }, 
+        x: { grid: { display: false } } 
+    }
+}
     });
 }
 
@@ -1327,30 +1415,41 @@ function updatePeriodInfo() {
         }
 
         function renderSankeyChart() {
-            if (typeof google === 'undefined' || !google.visualization || !google.visualization.Sankey) return;
-            
-            const periodVal = document.getElementById('sankey-period').value;
-            
-            // Usa a mesma função de meses completos para o Sankey
-            const filtered = getFilteredTransactionsByPeriod(globalTransactions, periodVal);
+    if (typeof google === 'undefined' || !google.visualization || !google.visualization.Sankey) return;
+    
+    const periodVal = document.getElementById('sankey-period').value;
+    
+    // 1. Filtragem de transações suportando Anos (year_YYYY) e periódos normais
+    let filtered = [];
+    let diffMonths = 1;
 
-            // Calcula a quantidade de meses para fazer a média mensal correta
-            let diffMonths = 1;
-            if (periodVal === 'last_2y') diffMonths = 24;
-            else if (periodVal === 'last_12m') diffMonths = 12;
-            else if (periodVal === 'last_6m') diffMonths = 6;
-            else if (periodVal === 'last_3m') diffMonths = 3;
-            else if (periodVal === 'last_1m') diffMonths = 1;
-            else if (periodVal === 'ALL') {
-                // Se for todo o histórico, calcula com base na diferença real de meses
-                let maxDate = new Date(0), minDate = new Date();
-                globalTransactions.forEach(t => {
-                    let d = parseDate(t.date);
-                    if (d > maxDate) maxDate = d;
-                    if (d < minDate) minDate = d;
-                });
-                diffMonths = Math.max(1, Math.round(Math.abs(maxDate - minDate) / (1000 * 60 * 60 * 24 * 30.44)));
-            }
+    if (periodVal.startsWith('year_')) {
+        let targetYear = periodVal.replace('year_', '');
+        filtered = globalTransactions.filter(t => {
+            let yearStr = t.date.split('/').pop() || t.date.substring(0, 4);
+            return yearStr === targetYear;
+        });
+        diffMonths = 12; // Média mensal do ano selecionado
+    } else {
+        filtered = getFilteredTransactionsByPeriod(globalTransactions, periodVal);
+
+        // Média de meses para os períodos normais
+        if (periodVal === 'last_5y') diffMonths = 60;
+        else if (periodVal === 'last_2y') diffMonths = 24;
+        else if (periodVal === 'last_12m') diffMonths = 12;
+        else if (periodVal === 'last_6m') diffMonths = 6;
+        else if (periodVal === 'last_3m') diffMonths = 3;
+        else if (periodVal === 'last_1m') diffMonths = 1;
+        else if (periodVal === 'ALL') {
+            let maxDate = new Date(0), minDate = new Date();
+            globalTransactions.forEach(t => {
+                let d = parseDate(t.date);
+                if (d > maxDate) maxDate = d;
+                if (d < minDate) minDate = d;
+            });
+            diffMonths = Math.max(1, Math.round(Math.abs(maxDate - minDate) / (1000 * 60 * 60 * 24 * 30.44)));
+        }
+    }
 
             let categoryTotals = {};
             let sumTotalIncome = 0;
@@ -1396,9 +1495,21 @@ function updatePeriodInfo() {
                 return [r.from, r.to, r.raw, sankeyTooltipHtml(r.cat, r.monthly)];
             });
 
-            // Atualiza os somatórios com margens maiores (px-28) para ficarem mais centrados em cima das barras do Sankey
-            document.getElementById('sankey-total-income').textContent = `Receitas: ${sumTotalIncome} €`;
-            document.getElementById('sankey-total-expense').textContent = `Despesas: ${sumTotalExpense} €`;
+            // Cálculo do valor de poupança líquida e taxa de poupança (%)
+const savingsVal = sumTotalIncome - sumTotalExpense;
+const savingsRate = sumTotalIncome > 0 ? Math.round((savingsVal / sumTotalIncome) * 100) : 0;
+
+// Atualização dos elementos no topo do gráfico Sankey
+document.getElementById('sankey-total-income').textContent = `Receitas: ${sumTotalIncome} €`;
+
+const savingsEl = document.getElementById('sankey-savings');
+if (savingsEl) {
+    savingsEl.textContent = `Poupança: ${savingsVal} € (${savingsRate}%)`;
+    // Fica verde se for positiva/zero e vermelho se for défice/negativa
+    savingsEl.className = `text-center ${savingsVal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+}
+
+document.getElementById('sankey-total-expense').textContent = `Despesas: ${sumTotalExpense} €`;
 
             const loadingEl = document.getElementById('sankey_loading');
             if (loadingEl) loadingEl.style.display = 'none';
@@ -1442,65 +1553,148 @@ function updatePeriodInfo() {
             chart.draw(data, options);
         }
 
-        function renderProjectionChart() {
-    const ctx = document.getElementById('projectionChart').getContext('2d');
-    
-    let currentBalanceGlobal = 0;
+        // Estrutura global para guardar a lista ordenada de pontos de corte
+let projectionPeriodOptions = [];
+
+// 1. Inicializa o Slider com TODAS as opções (Há X meses + Anos específicos + Hoje)
+function initProjectionBasePeriodFilter() {
+    const slider = document.getElementById('proj-base-period-slider');
+    const label = document.getElementById('proj-base-period-label');
+    if (!slider) return;
+
+    const yearsSet = new Set();
     globalTransactions.forEach(t => {
-        currentBalanceGlobal += t.amount;
+        const parts = t.date.split('/');
+        const year = parseInt(parts.length === 3 ? parts[2] : t.date.substring(0, 4), 10);
+        if (!isNaN(year) && year >= 2008) {
+            yearsSet.add(year);
+        }
     });
 
-    let maxDate = new Date(0);
-    globalTransactions.forEach(t => {
-        let d = parseDate(t.date);
-        if (d > maxDate) maxDate = d;
-    });
-    if (isNaN(maxDate.getTime())) maxDate = new Date();
+    const sortedYears = Array.from(yearsSet).sort((a, b) => a - b);
+    const currentYear = new Date().getFullYear();
+    const minYear = sortedYears.length > 0 ? sortedYears[0] : 2008;
+    const maxYear = sortedYears.length > 0 ? Math.max(sortedYears[sortedYears.length - 1], currentYear) : currentYear;
 
-    let limitTwoYearsAgo = new Date(maxDate);
-    limitTwoYearsAgo.setFullYear(limitTwoYearsAgo.getFullYear() - 2);
+    // Constrói a lista completa de opções por ordem cronológica
+    projectionPeriodOptions = [];
 
-    let sumGenIncome2Y = 0;
-    let sumExpense2Y = 0;
-    let countMonths2Y = 24;
-
-    let transLast2Y = globalTransactions.filter(t => {
-        let d = parseDate(t.date);
-        return d >= limitTwoYearsAgo && d <= maxDate;
-    });
-
-    let minDate2Y = new Date(maxDate);
-    transLast2Y.forEach(t => {
-        let d = parseDate(t.date);
-        if (d < minDate2Y) minDate2Y = d;
-    });
-
-    let diffTime2Y = Math.abs(maxDate - minDate2Y);
-    let calculatedMonths = Math.ceil(diffTime2Y / (1000 * 60 * 60 * 24 * 30.44));
-    if (calculatedMonths > 0 && calculatedMonths <= 24) {
-        countMonths2Y = calculatedMonths;
+    // A. Anos do Histórico (Início de 2008, 2009, ...)
+    for (let y = minYear; y <= maxYear; y++) {
+        projectionPeriodOptions.push({ value: `since_${y}`, label: `Início de ${y}` });
     }
 
-    transLast2Y.forEach(t => {
-        // Ignoramos a categoria 'Rend. Investimentos' no fluxo base pois o retorno é gerado pelo próprio património acumulado (juro composto)
+    // B. Meses Recentes (reintroduzidos)
+    projectionPeriodOptions.push({ value: 'last_12m', label: 'Há 12 Meses' });
+    projectionPeriodOptions.push({ value: 'last_6m', label: 'Há 6 Meses' });
+    projectionPeriodOptions.push({ value: 'last_3m', label: 'Há 3 Meses' });
+    projectionPeriodOptions.push({ value: 'last_1m', label: 'Há 1 Mês' });
+
+    // C. Ponto Atual (Padrão)
+    projectionPeriodOptions.push({ value: 'current', label: 'Atualmente' });
+
+    // Configura a barra
+    slider.min = 0;
+    slider.max = projectionPeriodOptions.length - 1;
+    slider.value = projectionPeriodOptions.length - 1; // Seleciona "Atualmente" por padrão
+
+    if (label) {
+        label.textContent = projectionPeriodOptions[slider.value].label;
+    }
+}
+
+// 2. Renderização do Gráfico com Leitura do Slider e Suporte a todas as Opções
+function renderProjectionChart() {
+    const ctx = document.getElementById('projectionChart')?.getContext('2d');
+    if (!ctx) return;
+
+const slider = document.getElementById('proj-base-period-slider');
+if (slider) {
+    // Pinta até ao ponto selecionado com a cor Âmbar do FIRE (#f59e0b)
+    updateSliderBackground(slider, '#f59e0b');
+}
+    const labelEl = document.getElementById('proj-base-period-label');
+
+    let basePeriodVal = 'current';
+    let displayLabel = 'Atualmente';
+
+    if (slider && projectionPeriodOptions.length > 0) {
+        const selectedIndex = parseInt(slider.value, 10) || 0;
+        const selectedOption = projectionPeriodOptions[selectedIndex] || projectionPeriodOptions[projectionPeriodOptions.length - 1];
+        basePeriodVal = selectedOption.value;
+        displayLabel = selectedOption.label;
+        if (labelEl) labelEl.textContent = displayLabel;
+    }
+
+    // A. Encontrar a última data absoluta registada
+    let absoluteMaxDate = new Date(0);
+    globalTransactions.forEach(t => {
+        let d = parseDate(t.date);
+        if (d > absoluteMaxDate) absoluteMaxDate = d;
+    });
+    if (isNaN(absoluteMaxDate.getTime())) absoluteMaxDate = new Date();
+
+    // B. Calcular a Data de Corte conforme a opção do slider
+    let cutoffDate = new Date(absoluteMaxDate);
+
+    if (basePeriodVal === 'last_1m') {
+        cutoffDate.setMonth(cutoffDate.getMonth() - 1);
+    } else if (basePeriodVal === 'last_3m') {
+        cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+    } else if (basePeriodVal === 'last_6m') {
+        cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+    } else if (basePeriodVal === 'last_12m') {
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+    } else if (basePeriodVal.startsWith('since_')) {
+        const year = parseInt(basePeriodVal.replace('since_', ''), 10);
+        cutoffDate = new Date(`${year}-01-01`);
+    }
+
+    // C. Filtrar Historico Válido (transações <= cutoffDate)
+    const validTransactions = globalTransactions.filter(t => parseDate(t.date) <= cutoffDate);
+
+    // D. Saldo Inicial na data de corte
+    let initialBalance = 0;
+    validTransactions.forEach(t => {
+        initialBalance += t.amount;
+    });
+
+    // E. Médias dos 2 anos ANTERIORES à data de corte
+    let twoYearsPriorToCutoff = new Date(cutoffDate);
+    twoYearsPriorToCutoff.setFullYear(twoYearsPriorToCutoff.getFullYear() - 2);
+
+    let sampleTransactions = validTransactions.filter(t => parseDate(t.date) >= twoYearsPriorToCutoff);
+
+    let minSampleDate = new Date(cutoffDate);
+    sampleTransactions.forEach(t => {
+        let d = parseDate(t.date);
+        if (d < minSampleDate) minSampleDate = d;
+    });
+
+    let diffMonths = Math.max(1, Math.ceil(Math.abs(cutoffDate - minSampleDate) / (1000 * 60 * 60 * 24 * 30.44)));
+
+    let sumGenIncome = 0;
+    let sumExpense = 0;
+
+    sampleTransactions.forEach(t => {
         if (t.category !== 'Rend. Investimentos') {
             if (t.amount > 0) {
-                sumGenIncome2Y += t.amount;
+                sumGenIncome += t.amount;
             } else {
-                sumExpense2Y += Math.abs(t.amount);
+                sumExpense += Math.abs(t.amount);
             }
         }
     });
 
-    let baseGeneralIncome = (sumGenIncome2Y / countMonths2Y) * 12;
-    let baseExpense = (sumExpense2Y / countMonths2Y) * 12;
+    let baseGeneralIncome = (sumGenIncome / diffMonths) * 12;
+    let baseExpense = (sumExpense / diffMonths) * 12;
 
+    // F. Taxas dos Sliders superiores
     const incGeneralRate = (parseFloat(document.getElementById('input-inc-general')?.value) || 2.5) / 100;
     const incExpenseRate = (parseFloat(document.getElementById('input-inc-expense')?.value) || 2.5) / 100;
     const incInvestRate = (parseFloat(document.getElementById('input-inc-invest')?.value) || 8) / 100;
 
-    const now = new Date();
-    const startYear = now.getFullYear();
+    const startYear = cutoffDate.getFullYear();
     const endYear = 2050;
     
     let labels = [];
@@ -1509,19 +1703,28 @@ function updatePeriodInfo() {
     let expenseValues = [];
     let investIncomeValues = [];
 
-    let runningBalance = currentBalanceGlobal;
-    
+    let runningBalance = initialBalance;
     let curGenInc = baseGeneralIncome;
     let curExp = baseExpense;
 
     let fireYearFound = null;
-    let incomeReducedApplied = false; // Garante que a redução de 60% só é aplicada uma vez
+    let incomeReducedApplied = false;
 
+    // G. Simulação Ano a Ano
     for (let yr = startYear; yr <= endYear; yr++) {
-        // Regra FIRE: O rendimento passivo do ano (saldo * taxa de investimento) é maior que as despesas do ano
+        if (yr > startYear) {
+            curGenInc *= (1 + incGeneralRate);
+            curExp *= (1 + incExpenseRate);
+        }
+
         let annualPassiveReturn = runningBalance * incInvestRate;
         if (!fireYearFound && annualPassiveReturn > curExp && yr > startYear) {
             fireYearFound = yr;
+        }
+
+        if (fireYearFound && yr === fireYearFound && !incomeReducedApplied) {
+            curGenInc *= 0.6;
+            incomeReducedApplied = true;
         }
 
         labels.push(yr.toString());
@@ -1530,30 +1733,13 @@ function updatePeriodInfo() {
         expenseValues.push(Math.round(curExp));
         investIncomeValues.push(Math.round(annualPassiveReturn));
 
-        // Atualização das variáveis para o ano seguinte
-        if (yr > startYear) {
-            curGenInc *= (1 + incGeneralRate);
-            curExp *= (1 + incExpenseRate);
-        }
-
-        // Simulação de reforma: a partir do ano seguinte a atingir o FIRE, as receitas
-        // gerais caem para 60% (deixa de haver salário, fica apenas rendimento de reforma).
-        // Aplicado uma única vez, no ano em que o FIRE é atingido, para que o ano seguinte
-        // já reflita o corte; a partir daí a receita reduzida continua a crescer normalmente.
-        if (fireYearFound && yr === fireYearFound && !incomeReducedApplied) {
-            curGenInc *= 0.6;
-            incomeReducedApplied = true;
-        }
-        
-        // Aplicação da fórmula exata do saldo:
-        // Saldo do próximo ano = (Saldo Anterior + Receitas Gerais - Despesas) * (1 + Taxa de Investimento)
         let netCashflow = curGenInc - curExp;
         runningBalance = (runningBalance + netCashflow) * (1 + incInvestRate);
     }
 
-    document.getElementById('proj-current-balance').textContent = formatCurrencyRounded(currentBalanceGlobal);
+    // H. Atualizar Cartões e Resumos
+    document.getElementById('proj-current-balance').textContent = formatCurrencyRounded(initialBalance);
 
-    // Resumo do saldo previsto de 5 em 5 anos (até 2050), incluindo o ano em que o FIRE é atingido
     const fiveYearSummaryEl = document.getElementById('proj-five-year-summary');
     let fiveYearRows = '';
     labels.forEach((yr, idx) => {
@@ -1583,38 +1769,39 @@ function updatePeriodInfo() {
         id: 'fireAnnotation',
         afterDraw: (chart) => {
             if (!fireYearFound) return;
-            const ctx = chart.ctx;
+            const ctxChart = chart.ctx;
             const xAxis = chart.scales.x;
             const yAxis = chart.scales.y;
             
             const xPos = xAxis.getPixelForValue(fireYearFound.toString());
             if (xPos === undefined) return;
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4, 4]);
-            ctx.moveTo(xPos, yAxis.top);
-            ctx.lineTo(xPos, yAxis.bottom);
-            ctx.stroke();
-            ctx.restore();
+            ctxChart.save();
+            ctxChart.beginPath();
+            ctxChart.strokeStyle = '#f59e0b';
+            ctxChart.lineWidth = 2;
+            ctxChart.setLineDash([4, 4]);
+            ctxChart.moveTo(xPos, yAxis.top);
+            ctxChart.lineTo(xPos, yAxis.bottom);
+            ctxChart.stroke();
+            ctxChart.restore();
 
-            ctx.save();
-            ctx.fillStyle = '#f59e0b';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(`🔥 FIRE (${fireYearFound})`, xPos, yAxis.top + 20);
-            ctx.restore();
+            ctxChart.save();
+            ctxChart.fillStyle = '#f59e0b';
+            ctxChart.font = 'bold 11px sans-serif';
+            ctxChart.textAlign = 'center';
+            ctxChart.fillText(`🔥 FIRE (${fireYearFound})`, xPos, yAxis.top + 20);
+            ctxChart.restore();
         }
     };
 
+    // I. Renderizar Chart.js
     projectionChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Previsão de Saldo (com base nos últimos 2 anos)',
+                label: `Previsão de Saldo (Ponto de Situação: ${displayLabel})`,
                 data: projectionValues,
                 borderColor: '#16a34a',
                 backgroundColor: 'rgba(22, 163, 74, 0.1)',
@@ -1796,5 +1983,66 @@ function updatePeriodInfo() {
         window.addEventListener('DOMContentLoaded', registarAcesso);
       }
     </script>
+    <script>
+    // 1. Função Auxiliar do Gradiente
+    function updateSliderBackground(sliderInput, activeColor = '#16a34a') {
+        if (!sliderInput) return;
+        const min = parseFloat(sliderInput.min) || 0;
+        const max = parseFloat(sliderInput.max) || 100;
+        const val = parseFloat(sliderInput.value) || 0;
+        
+        const percentage = ((val - min) / (max - min)) * 100;
+        sliderInput.style.background = `linear-gradient(to right, ${activeColor} ${percentage}%, #e2e8f0 ${percentage}%)`;
+    }
+
+    // 2. Configuração dos Listeners das Cores dos Sliders
+    function setupSliderColorListeners() {
+        const incGen = document.getElementById('input-inc-general');
+        const incExp = document.getElementById('input-inc-expense');
+        const incInv = document.getElementById('input-inc-invest');
+
+        if (incGen) {
+            updateSliderBackground(incGen, '#16a34a'); // Verde Brand
+            incGen.addEventListener('input', (e) => {
+                updateSliderBackground(e.target, '#16a34a');
+                renderProjectionChart();
+            });
+        }
+
+        if (incExp) {
+            updateSliderBackground(incExp, '#e11d48'); // Vermelho Rose
+            incExp.addEventListener('input', (e) => {
+                updateSliderBackground(e.target, '#e11d48');
+                renderProjectionChart();
+            });
+        }
+
+        if (incInv) {
+            updateSliderBackground(incInv, '#4f46e5'); // Azul Indigo
+            incInv.addEventListener('input', (e) => {
+                updateSliderBackground(e.target, '#4f46e5');
+                renderProjectionChart();
+            });
+        }
+    }
+
+    // 3. Execução no Arrancamento
+    window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Desativa a animação global inicial para evitar flashes/engasgos se houver atualizações rápidas
+    Chart.defaults.animation.duration = 1500;
+    Chart.defaults.animation.easing = 'easeOutQuart';
+
+    // 2. Carrega os dados externos (se existirem)
+    await tryLoadExternalExcel();
+
+    // 3. Inicializa os filtros e sliders UMA ÚNICA VEZ
+    initFilters();
+    setupEventListeners();
+    setupSliderColorListeners();
+
+    // 4. Renderiza todos os gráficos suavemente
+    processAndRender();
+});
+</script>
 </body>
 </html>
