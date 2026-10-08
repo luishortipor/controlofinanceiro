@@ -903,7 +903,7 @@
             renderCharts();
             renderSankeyChart();
             updateSimulatorUI();
-            renderProjectionChart();
+            renderProjectionChart(true);
             currentPage = 1;
             renderTable();
         }
@@ -1085,6 +1085,27 @@ function updatePeriodInfo() {
             });
         }
 
+        // Animação "desenha da esquerda para a direita" com DURAÇÃO TOTAL FIXA.
+        // O tempo por ponto = duração total / nº de pontos, por isso demora sempre o mesmo
+        // (1 s por defeito), quer o gráfico tenha 20 ou 2000 pontos.
+        function buildLineDrawAnimation(pointsCount, totalDuration = 1000) {
+            const delayPerPoint = totalDuration / Math.max(pointsCount, 1);
+            return {
+                x: {
+                    type: 'number',
+                    easing: 'linear',
+                    duration: delayPerPoint,
+                    from: NaN,
+                    delay(ctx) {
+                        if (ctx.type !== 'data' || ctx.xStarted) return 0;
+                        ctx.xStarted = true;
+                        return ctx.index * delayPerPoint;
+                    }
+                },
+                y: { type: 'number', easing: 'linear', duration: 0 }
+            };
+        }
+
         function renderBalanceChart() {
     const ctx = document.getElementById('balanceChart').getContext('2d');
     
@@ -1183,19 +1204,7 @@ function updatePeriodInfo() {
         options: {
     responsive: true,
     maintainAspectRatio: false,
-    animation: {
-    duration: 1000,
-    easing: 'easeOutQuart',
-    x: {
-        type: 'number',
-        from: 0, // Começa a desenhar do marco 0 do gráfico imediatamente
-    },
-    y: {
-        type: 'number',
-        duration: 1000,
-        easing: 'easeOutQuart'
-    }
-},
+    animation: buildLineDrawAnimation(dataPoints.length),
     plugins: { 
         legend: { position: 'bottom' },
         datalabels: { display: false },
@@ -1604,7 +1613,7 @@ function initProjectionBasePeriodFilter() {
 }
 
 // 2. Renderização do Gráfico com Leitura do Slider e Suporte a todas as Opções
-function renderProjectionChart() {
+function renderProjectionChart(animate = false) {
     const ctx = document.getElementById('projectionChart')?.getContext('2d');
     if (!ctx) return;
 
@@ -1814,6 +1823,7 @@ if (slider) {
         options: { 
             responsive: true, 
             maintainAspectRatio: false, 
+            ...(animate === true ? { animation: buildLineDrawAnimation(labels.length) } : {}),
             plugins: { 
                 legend: { position: 'bottom' },
                 datalabels: { display: false },
